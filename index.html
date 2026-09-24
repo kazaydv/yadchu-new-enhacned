@@ -1,0 +1,2386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yachu — Ultralight hammocks & packable gear from Nepal</title>
+<meta name="description" content="Yachu makes ultralight, handmade outdoor gear in Nepal: the 225 g Airlite Hammock Set, the Sano Packable Daypack, and packable shelter.">
+<!--
+  STATIC BUILD NOTES (read me before hosting)
+  ============================================
+  This is a fully self-contained, dependency-free static site: one index.html
+  (this file) plus the /images folder next to it. No build step, no server,
+  no Shopify. Upload both to any static host.
+
+  Two things are intentionally stubbed because there is no backend here:
+
+  1. CHECKOUT — there is no payment processor wired up. Clicking "Checkout"
+     (in the cart drawer or the full cart page) shows an inline message
+     telling the visitor this is a preview and to email info@yachu.co to
+     order. It never pretends to charge anyone. To go live, wire the
+     "Checkout" buttons (search for `data-checkout` in the script below) to
+     a real cart/checkout flow (e.g. Shopify, Snipcart, a custom API).
+
+  2. NEWSLETTER SIGNUP — the footer email form is not connected to any
+     mailing-list provider. Submitting it just shows a friendly inline
+     "you're on the list" acknowledgement (search for `data-newsletter-form`
+     below). Wire it to Klaviyo/Mailchimp/etc. before relying on it.
+
+  Cart state (yachu-cart) and market/country simulation (yachu-market) are
+  stored in the visitor's own browser via localStorage, so the cart persists
+  across reloads on the same device but is never sent anywhere.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@500&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   Yachu — theme.css
+   Design tokens + base styles + shared components.
+   Rebuilt from the "final design" prototype (Instrument Sans / IBM Plex Mono,
+   sand & orange palette, ink buttons). Tokens are also exposed as CSS
+   variables driven by theme settings (see snippets/theme-styles-variables.liquid)
+   so merchants can retint from the theme editor without touching this file.
+   ========================================================================== */
+
+:root {
+  /* Palette (defaults — overridden inline by theme-styles-variables.liquid from settings_data.json) */
+  --color-bg: #FAFAF7;
+  --color-bg-2: #F1EEE7;
+  --color-sand: #D6CCBB;
+  --color-ink: #211F1B;
+  --color-soft: #514E47;
+  --color-accent: #C94A1C;
+  --color-hairline: #DAD5CA;
+  --color-dark: #211F1B;
+  --color-on-dark: #FAFAF7;
+  --color-page: #E7E4DD;
+
+  /* Type */
+  --font-body: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
+  --font-devanagari: 'Noto Sans Devanagari', sans-serif;
+
+  /* Rhythm */
+  --gutter: clamp(20px, 5vw, 64px);
+  --radius: 6px;
+  --radius-sm: 4px;
+  --container-max: 1280px;
+
+  color-scheme: light;
+}
+
+/* ---------- Reset ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--color-page);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+img, svg { display: block; max-width: 100%; }
+a { color: inherit; text-decoration: none; }
+a.link-underline, .link-underline { text-decoration: underline; text-underline-offset: 3px; }
+a:hover { opacity: .75; }
+button { font-family: inherit; }
+h1, h2, h3, h4, p, figure, ol, ul { margin: 0; }
+ol, ul { padding: 0; list-style: none; }
+input, textarea, select, button { font-family: inherit; font-size: inherit; color: inherit; }
+[hidden] { display: none !important; }
+.visually-hidden {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+[data-scroll-track]::-webkit-scrollbar { display: none; }
+[data-scroll-track] { scrollbar-width: none; }
+
+/* ---------- Layout shell ---------- */
+.shop-frame {
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
+.wrap {
+  max-width: var(--container-max);
+  margin: 0 auto;
+}
+.px { padding-left: var(--gutter); padding-right: var(--gutter); }
+
+/* ---------- Typography ---------- */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--color-soft);
+}
+.h1 {
+  margin: 0;
+  font-size: clamp(38px, 5cqi, 64px);
+  line-height: 1;
+  letter-spacing: -.035em;
+  font-weight: 600;
+}
+.h1--display {
+  font-size: clamp(40px, 6cqi, 84px);
+  line-height: .98;
+}
+.h2 {
+  margin: 0;
+  font-size: clamp(30px, 3.8cqi, 52px);
+  line-height: 1.05;
+  letter-spacing: -.03em;
+  font-weight: 600;
+}
+.h3 { margin: 0; font-size: 18px; font-weight: 600; }
+.body-lg { font-size: clamp(16px, 1.5cqi, 19px); line-height: 1.55; }
+.body { font-size: 15px; line-height: 1.55; }
+.body-sm { font-size: 13px; line-height: 1.5; }
+.text-soft { color: var(--color-soft); }
+.text-accent { color: var(--color-accent); }
+.mono { font-family: var(--font-mono); }
+.text-balance { text-wrap: balance; }
+.text-pretty { text-wrap: pretty; }
+.stars { letter-spacing: 2px; color: var(--color-ink); }
+
+/* ---------- Buttons ---------- */
+.btn {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 56px;
+  padding: 0 24px;
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+}
+.btn--primary { background: var(--color-ink); color: var(--color-bg); }
+.btn--primary:hover { opacity: .88; }
+.btn--secondary { box-shadow: inset 0 0 0 1px var(--color-ink); color: var(--color-ink); }
+.btn--secondary:hover { opacity: .7; }
+.btn--light { background: var(--color-bg); color: var(--color-ink); }
+.btn--on-dark { background: var(--color-on-dark); color: #141414; }
+.btn--sm { height: 44px; padding: 0 18px; font-size: 14px; }
+.btn--pill { border-radius: 22px; height: 44px; padding: 0 18px; font-size: 14px; }
+.btn--block { width: 100%; }
+.btn--disabled,
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+.btn-divider { width: 1px; height: 18px; background: currentColor; opacity: .35; }
+.btn-text {
+  all: unset; cursor: pointer; font-size: 14px; font-weight: 500;
+  text-decoration: underline; text-underline-offset: 4px; padding: 8px;
+}
+
+/* Icon buttons */
+.icon-btn {
+  all: unset; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.round-btn {
+  width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--color-hairline);
+  background: var(--color-bg); color: inherit; cursor: pointer; font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Stepper */
+.stepper {
+  display: flex; align-items: center; border: 1px solid var(--color-hairline); border-radius: var(--radius-sm);
+}
+.stepper--dark { border-color: var(--color-ink); }
+.stepper button { all: unset; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.stepper span { font-family: var(--font-mono); font-size: 14px; min-width: 24px; text-align: center; }
+
+/* ---------- Badges ---------- */
+.badge-new {
+  display: inline-flex; align-items: center; background: var(--color-accent); color: #FAFAF7;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; padding: 5px 8px; border-radius: 3px;
+}
+.badge-count {
+  font-family: var(--font-mono); font-size: 11px; background: var(--color-bg); padding: 4px 8px; border-radius: 3px;
+}
+
+/* ---------- Header ---------- */
+.site-header-wrap { position: sticky; top: 0; z-index: 40; font-family: var(--font-body); color: var(--color-ink); }
+.announcement-bar {
+  display: flex; justify-content: center; align-items: center; gap: 10px;
+  background: var(--color-dark); color: var(--color-on-dark); font-size: 13px; padding: 10px 16px; text-align: center;
+}
+.announcement-bar .eyebrow { color: inherit; opacity: .7; font-size: 10px; }
+.site-header {
+  position: relative; display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  padding: 18px var(--gutter); border-bottom: 1px solid var(--color-hairline); background: var(--color-bg);
+}
+.site-header__logo img { height: 22px; width: auto; }
+.site-header__nav { display: flex; gap: 32px; font-size: 15px; font-weight: 500; }
+.site-header__nav a { padding-bottom: 3px; border-bottom: 1.5px solid transparent; }
+.site-header__nav a.is-active { border-bottom-color: var(--color-ink); }
+.site-header__actions { display: flex; align-items: center; gap: 20px; font-size: 15px; font-weight: 500; }
+.site-header__cart-count { all: unset; cursor: pointer; font-size: 15px; font-weight: 500; }
+.header-menu-toggle { display: none; }
+
+.mobile-nav {
+  position: absolute; top: 100%; left: 0; right: 0; background: var(--color-bg);
+  border-bottom: 1px solid var(--color-hairline); display: flex; flex-direction: column;
+  padding: 8px 20px 20px; box-shadow: 0 16px 32px rgba(0,0,0,.08);
+}
+.mobile-nav a {
+  display: flex; justify-content: space-between; align-items: center; min-height: 52px;
+  border-bottom: 1px solid var(--color-hairline); font-size: 18px; font-weight: 500;
+}
+.mobile-nav a .chev { color: var(--color-soft); }
+
+@media (min-width: 900px) {
+  .header-menu-toggle { display: none; }
+}
+@media (max-width: 899px) {
+  .site-header__nav { display: none; }
+  .header-menu-toggle { display: flex; }
+}
+
+/* ---------- Cart drawer ---------- */
+.cart-drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; width: min(100%, 420px); max-height: 100vh; overflow: auto;
+  background: var(--color-bg); border-left: 1px solid var(--color-hairline); box-shadow: -24px 0 48px rgba(0,0,0,.14);
+  display: flex; flex-direction: column; z-index: 60; transform: translateX(100%); transition: transform .28s ease;
+}
+.cart-drawer.is-open { transform: translateX(0); }
+.cart-drawer__backdrop {
+  position: fixed; inset: 0; background: rgba(20,18,15,.35); z-index: 55; opacity: 0; pointer-events: none; transition: opacity .28s ease;
+}
+.cart-drawer__backdrop.is-open { opacity: 1; pointer-events: auto; }
+.cart-drawer__head { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--color-hairline); }
+.cart-drawer__head strong { font-size: 17px; font-weight: 600; }
+.cart-drawer__close { all: unset; cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--color-soft); }
+.cart-drawer__empty { padding: 32px 20px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
+.cart-drawer__items { display: flex; flex-direction: column; }
+.cart-line {
+  display: flex; gap: 14px; padding: 16px 20px; border-bottom: 1px solid var(--color-hairline);
+}
+.cart-line__img { width: 64px; height: 64px; flex: 0 0 64px; border-radius: var(--radius-sm); overflow: hidden; }
+.cart-line__img img { width: 100%; height: 100%; object-fit: cover; }
+.cart-line__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.cart-line__top { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; font-weight: 500; }
+.cart-line__variant { font-size: 13px; color: var(--color-soft); margin-top: -6px; }
+.cart-drawer__suggest {
+  margin: 16px 20px 0; padding: 14px; border: 1px solid var(--color-hairline); border-radius: var(--radius);
+  display: flex; align-items: center; gap: 12px;
+}
+.cart-drawer__suggest img { width: 52px; height: 52px; border-radius: var(--radius-sm); object-fit: cover; }
+.cart-drawer__summary { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 10px; }
+.summary-row { display: flex; justify-content: space-between; font-size: 14px; color: var(--color-soft); }
+.summary-row--discount { color: var(--color-accent); }
+.summary-row--total { font-size: 17px; font-weight: 600; color: var(--color-ink); }
+.summary-note { font-size: 13px; color: var(--color-accent); margin-top: -4px; }
+.payment-icons-note { text-align: center; font-size: 12px; color: var(--color-soft); }
+
+/* Cart page (full) */
+.cart-page-line { display: flex; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--color-hairline); }
+.cart-page-line__img { width: 88px; height: 88px; flex: 0 0 88px; border-radius: var(--radius-sm); overflow: hidden; }
+.cart-page-line__img img { width: 100%; height: 100%; object-fit: cover; }
+.cart-summary-box { background: var(--color-bg-2); border-radius: var(--radius); padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+
+/* ---------- Footer ---------- */
+.site-footer {
+  background: var(--color-dark); color: var(--color-on-dark);
+  padding: clamp(44px, 6vw, 72px) var(--gutter) 26px;
+  display: flex; flex-direction: column; gap: 40px;
+}
+.site-footer__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 32px; }
+.site-footer__newsletter { display: flex; flex-direction: column; gap: 14px; grid-column: span 2; min-width: 0; }
+.site-footer__newsletter-title { font-size: 18px; font-weight: 500; }
+.newsletter-form { display: flex; border-bottom: 1px solid rgba(250,250,247,.4); max-width: 360px; }
+.newsletter-form input {
+  all: unset; flex: 1; padding: 10px 0; font-size: 15px; color: var(--color-on-dark);
+}
+.newsletter-form input::placeholder { color: var(--color-on-dark); opacity: .6; }
+.newsletter-form button { all: unset; cursor: pointer; padding: 10px 0; font-size: 15px; font-weight: 500; }
+.site-footer__social { display: flex; gap: 18px; font-size: 14px; opacity: .8; flex-wrap: wrap; }
+.site-footer__col { display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
+.site-footer__col-title { font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; opacity: .6; }
+.site-footer__bottom {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 12px; opacity: .6;
+  border-top: 1px solid rgba(250,250,247,.15); padding-top: 20px;
+}
+
+/* ---------- Grid / carousel helpers ---------- */
+.grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); }
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); }
+.grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(46%, 280px), 1fr)); gap: 24px 12px; }
+.carousel {
+  display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+  padding: 0 var(--gutter); scroll-padding: 0 var(--gutter);
+}
+.carousel-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; padding: 0 var(--gutter) clamp(24px,3vw,40px); }
+.carousel-controls { display: flex; gap: 8px; }
+
+/* ---------- Product card ---------- */
+.product-card { display: flex; flex-direction: column; gap: 10px; }
+.product-card__media { position: relative; aspect-ratio: 1; border-radius: var(--radius); overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.product-card__media img { width: 100%; height: 100%; object-fit: cover; }
+.product-card__badge { position: absolute; top: 12px; left: 12px; }
+.product-card__row { display: flex; justify-content: space-between; gap: 12px; font-size: 16px; font-weight: 500; }
+.product-card__meta { font-size: 13px; color: var(--color-soft); margin-top: -4px; }
+
+/* ---------- Stat row ---------- */
+.stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(50%, 160px), 1fr)); border-top: 1px solid var(--color-hairline); border-bottom: 1px solid var(--color-hairline); }
+.stat-tile { padding: clamp(18px, 2.2vw, 28px) clamp(20px, 3vw, 40px); box-shadow: 1px 0 0 var(--color-hairline); display: flex; flex-direction: column; gap: 2px; }
+.stat-tile__value { font-size: clamp(22px, 2.4vw, 32px); font-weight: 600; letter-spacing: -.02em; }
+.stat-tile__label { font-size: 13px; color: var(--color-soft); }
+
+/* ---------- Accordion ---------- */
+.accordion { border-top: 1px solid var(--color-ink); }
+.accordion-item { border-bottom: 1px solid var(--color-hairline); }
+.accordion-item__trigger {
+  all: unset; box-sizing: border-box; width: 100%; cursor: pointer; display: flex; justify-content: space-between;
+  align-items: center; gap: 16px; min-height: 56px; font-size: 16px; font-weight: 600;
+}
+.accordion-item__sign { font-size: 20px; font-weight: 400; }
+.accordion-item__panel { display: flex; flex-direction: column; gap: 2px; padding-bottom: 16px; }
+.accordion-item__panel[hidden] { display: none; }
+.accordion-row { display: flex; justify-content: space-between; gap: 16px; padding: 7px 0; font-size: 14px; line-height: 1.5; }
+.accordion-row--group { font-size: 12px; font-weight: 600; color: var(--color-soft); }
+.accordion-row__val { font-family: var(--font-mono); font-size: 13px; text-align: right; color: var(--color-soft); }
+
+/* ---------- Chips / filters ---------- */
+.chip-row { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+.chip {
+  all: unset; box-sizing: border-box; cursor: pointer; flex: none; height: 40px; padding: 0 16px; border-radius: 20px;
+  font-size: 14px; font-weight: 500; box-shadow: inset 0 0 0 1px var(--color-ink); display: flex; align-items: center; gap: 6px;
+}
+.chip.is-active { background: var(--color-ink); color: var(--color-bg); }
+.chip__count { font-family: var(--font-mono); font-size: 11px; opacity: .6; }
+
+/* ---------- Color swatches ---------- */
+.swatch-row { display: flex; gap: 12px; }
+.swatch {
+  width: 32px; height: 32px; border-radius: 50%; border: 0; padding: 0; cursor: pointer; position: relative;
+}
+.swatch.is-active { box-shadow: 0 0 0 2px var(--color-bg-2), 0 0 0 3.5px var(--color-ink); }
+
+/* ---------- Reviews ---------- */
+.review-score { display: flex; align-items: flex-end; gap: 14px; }
+.review-score__num { font-size: clamp(56px, 6vw, 80px); line-height: .85; letter-spacing: -.04em; font-weight: 600; }
+.review-dist-row { display: grid; grid-template-columns: 28px 1fr 28px; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 12px; color: var(--color-soft); }
+.review-dist-bar { height: 6px; background: #E7E2D8; border-radius: 3px; overflow: hidden; }
+.review-dist-bar span { display: block; height: 100%; background: var(--color-ink); }
+.review-card { padding: 24px 0; border-bottom: 1px solid var(--color-hairline); display: flex; flex-direction: column; gap: 10px; }
+
+/* ---------- Sticky mobile buy bar ---------- */
+.sticky-buy-bar {
+  position: sticky; bottom: 0; z-index: 30; background: var(--color-bg); border-top: 1px solid var(--color-hairline);
+  padding: 10px 16px; display: flex; align-items: center; gap: 12px;
+}
+.sticky-buy-bar__img { width: 44px; height: 44px; flex: 0 0 44px; border-radius: var(--radius-sm); overflow: hidden; background: var(--color-sand); }
+.sticky-buy-bar__img img { width: 100%; height: 100%; object-fit: cover; }
+@media (min-width: 900px) { .sticky-buy-bar { display: none; } }
+
+/* ---------- Utility ---------- */
+.stack { display: flex; flex-direction: column; }
+.gap-1 { gap: 8px; } .gap-2 { gap: 12px; } .gap-3 { gap: 18px; } .gap-4 { gap: 24px; }
+.section { padding-top: clamp(56px, 8vw, 112px); padding-bottom: clamp(56px, 8vw, 112px); }
+.section--tight { padding-top: clamp(36px, 5vw, 64px); padding-bottom: clamp(36px, 5vw, 64px); }
+.border-top { border-top: 1px solid var(--color-hairline); }
+.border-bottom { border-bottom: 1px solid var(--color-hairline); }
+.cqi { container-type: inline-size; }
+
+@media (max-width: 749px) {
+  .grid-auto, .grid-2 { grid-template-columns: 1fr; }
+}
+
+/* ==========================================================================
+   Static-site additions (router, hero, PDP gallery, ledger, pack builder,
+   help tabs, journal, stockists, misc.) — layered on top of theme.css.
+   ========================================================================== */
+body { background: var(--color-bg); }
+
+.skip-link {
+  position: absolute; left: -9999px; top: 0; background: var(--color-ink); color: var(--color-bg);
+  padding: 10px 16px; z-index: 100; border-radius: 0 0 4px 0;
+}
+.skip-link:focus { left: 0; }
+
+/* Router */
+[data-route] { display: none; }
+[data-route].is-active { display: block; }
+
+.breadcrumb { display: flex; gap: 8px; font-size: 13px; color: var(--color-soft); padding: 16px var(--gutter) 0; }
+.breadcrumb .current { color: var(--color-ink); }
+
+/* Hero (story / journal / creators / where-to-buy image intro) */
+.hero-media { position: relative; min-height: clamp(420px, 52vw, 720px); display: flex; align-items: flex-end; color: #FAFAF7; overflow: hidden; }
+.hero-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.hero-media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,.62) 100%); }
+.hero-media__content { position: relative; width: 100%; box-sizing: border-box; padding: var(--gutter); display: flex; flex-direction: column; gap: 14px; z-index: 1; }
+.hero-media__meta { display: flex; justify-content: space-between; gap: 12px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; opacity: .9; padding-top: 8px; }
+
+/* Home hero */
+.home-hero { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); background: var(--color-bg-2); }
+.home-hero__copy { display: flex; flex-direction: column; justify-content: center; gap: clamp(18px, 1.8cqi, 24px); padding: clamp(36px, 7vw, 96px) var(--gutter); }
+.home-hero__photo { position: relative; min-height: clamp(320px, 46vw, 640px); }
+.home-hero__photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.home-hero__photo-cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 16px 20px; display: flex; justify-content: space-between; gap: 12px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; color: #FAFAF7; background: linear-gradient(transparent, rgba(0,0,0,.45)); }
+.upsell-panel { display: flex; flex-direction: column; gap: 14px; padding: 16px; border: 1px solid var(--color-hairline); border-radius: var(--radius); background: var(--color-bg); }
+.upsell-panel[hidden] { display: none; }
+.upsell-panel__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 14px; }
+.upsell-panel__row { display: flex; align-items: center; gap: 14px; }
+.upsell-panel__img { width: 64px; height: 64px; flex: 0 0 64px; border-radius: 4px; overflow: hidden; background: #fff; }
+.upsell-panel__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* In-the-pouch ledger */
+.ledger { display: flex; flex-direction: column; font-family: var(--font-mono); font-size: 14px; }
+.ledger-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--color-hairline); }
+.ledger-row__thumb { width: 56px; height: 56px; flex: 0 0 56px; border-radius: 4px; background: var(--color-sand); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.ledger-row__thumb img { display: block; }
+.ledger-row__thumb img.is-contain { width: 84%; height: 84%; object-fit: contain; }
+.ledger-row__thumb img.is-cover { width: 100%; height: 100%; object-fit: cover; }
+.ledger-row__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ledger-row__note { font-family: var(--font-body); font-size: 13px; color: var(--color-soft); }
+.ledger-row__val { flex: 1; text-align: right; color: var(--color-soft); white-space: nowrap; }
+.ledger-total { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-top: 16px; }
+.ledger-total__val { font-size: clamp(28px, 3vw, 36px); font-weight: 500; color: var(--color-accent); white-space: nowrap; }
+
+/* Sano crossover / dark sections */
+.section-dark { background: #141414; color: #F4F3F0; }
+.section-dark .text-soft { color: rgba(244,243,240,.72); }
+.section-dark .accent-chip { display: inline-flex; align-items: center; background: var(--color-accent); color: #FAFAF7; padding: 4px 8px; border-radius: 3px; }
+.dark-ledger { display: flex; flex-direction: column; font-family: var(--font-mono); font-size: 14px; }
+.dark-ledger-row { display: flex; align-items: baseline; gap: 12px; padding: 11px 0; border-bottom: 1px solid rgba(244,243,240,.16); }
+.dark-ledger-row__fill { flex: 1; border-bottom: 1px dotted rgba(244,243,240,.22); transform: translateY(-4px); }
+.dark-ledger-row__val { opacity: .7; text-align: right; }
+.dark-shot { position: relative; flex: 0 0 clamp(260px, 42cqi, 380px); aspect-ratio: 4/5; border-radius: 6px; overflow: hidden; scroll-snap-align: start; }
+.dark-shot img { width: 100%; height: 100%; display: block; }
+.dark-shot figcaption { position: absolute; left: 12px; bottom: 12px; background: #141414; color: #F4F3F0; font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; padding: 6px 9px; }
+
+/* Pack builder */
+.preset-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.preset-chip { all: unset; box-sizing: border-box; cursor: pointer; height: 44px; padding: 0 18px; border-radius: 22px; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; box-shadow: inset 0 0 0 1px var(--color-ink); }
+.preset-chip.is-active { background: var(--color-ink); color: var(--color-bg); }
+.preset-chip__w { font-family: var(--font-mono); font-size: 12px; opacity: .7; }
+.checklist { border: 1px solid var(--color-hairline); border-radius: var(--radius); overflow: hidden; }
+.checklist-row { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-bottom: 1px solid var(--color-hairline); cursor: pointer; background: var(--color-bg); }
+.checklist-row__box { width: 22px; height: 22px; flex: 0 0 22px; border-radius: 4px; border: 1.5px solid var(--color-ink); color: var(--color-bg); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.checklist-row__box.is-on { background: var(--color-ink); }
+.checklist-row__img { width: 52px; height: 52px; flex: 0 0 52px; border-radius: 4px; overflow: hidden; background: var(--color-sand); display: flex; align-items: center; justify-content: center; }
+.checklist-row__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.checklist-row__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; text-align: left; }
+.checklist-summary { padding: 18px; display: flex; flex-direction: column; gap: 10px; background: var(--color-bg-2); }
+
+/* Addon box (PDP) */
+.addon-box { border: 1px solid var(--color-hairline); border-radius: var(--radius); overflow: hidden; }
+.addon-box__head { padding: 12px 16px; font-size: 14px; font-weight: 600; background: var(--color-bg-2); }
+.addon-row { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--color-hairline); cursor: pointer; }
+.addon-row__box { width: 22px; height: 22px; flex: 0 0 22px; border-radius: 4px; border: 1.5px solid var(--color-ink); color: var(--color-bg); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.addon-row__box.is-on { background: var(--color-ink); }
+.addon-row__img { width: 44px; height: 44px; flex: 0 0 44px; border-radius: 4px; overflow: hidden; background: #fff; }
+.addon-row__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.addon-row__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; text-align: left; }
+.addon-note { padding: 10px 16px; border-top: 1px solid var(--color-hairline); font-size: 13px; }
+
+/* PDP gallery */
+.pdp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: clamp(20px, 4vw, 56px); padding: 16px var(--gutter) clamp(48px, 6vw, 80px); align-items: start; }
+.pdp-gallery { display: flex; flex-direction: column; gap: 10px; }
+.pdp-gallery__main { position: relative; aspect-ratio: 1; background: var(--color-sand); overflow: hidden; border-radius: var(--radius); }
+.pdp-gallery__main.is-portrait { aspect-ratio: 4/5; }
+.pdp-gallery__main img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.pdp-gallery__cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 30px 16px 12px; display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; color: #FAFAF7; background: linear-gradient(transparent, rgba(0,0,0,.45)); }
+.pdp-gallery__count { position: absolute; top: 12px; right: 12px; font-family: var(--font-mono); font-size: 11px; background: var(--color-bg); padding: 4px 8px; border-radius: 3px; }
+.pdp-gallery__badge { position: absolute; top: 12px; left: 12px; background: var(--color-accent); color: #FAFAF7; font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; padding: 5px 8px; border-radius: 3px; }
+.pdp-thumbs { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+.pdp-thumbs::-webkit-scrollbar { display: none; }
+.pdp-thumb { all: unset; cursor: pointer; flex: 0 0 64px; height: 64px; border-radius: 4px; overflow: hidden; background: var(--color-sand); }
+.pdp-thumb.is-tall { height: 80px; }
+.pdp-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pdp-thumb.is-active { box-shadow: inset 0 0 0 2px var(--color-ink); }
+.pdp-info { display: flex; flex-direction: column; gap: 18px; }
+
+/* Field / lifestyle carousel figures */
+.field-shot { margin: 0; position: relative; flex: 0 0 clamp(280px, 40cqi, 480px); aspect-ratio: 4/5; border-radius: 6px; overflow: hidden; scroll-snap-align: start; }
+.field-shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.field-shot figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 30px 14px 12px; display: flex; flex-direction: column; gap: 4px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; color: #FAFAF7; background: linear-gradient(transparent, rgba(0,0,0,.5)); }
+
+/* Quick quotes */
+.quote-track { display: flex; gap: 28px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 18px var(--gutter); border-top: 1px solid var(--color-hairline); border-bottom: 1px solid var(--color-hairline); }
+.quote-track::-webkit-scrollbar { display: none; }
+.quote-card { margin: 0; flex: 0 0 auto; max-width: 340px; scroll-snap-align: start; display: flex; flex-direction: column; gap: 6px; }
+.quote-card blockquote { margin: 0; font-size: 15px; line-height: 1.4; }
+
+/* Lifestyle banner */
+.lifestyle-banner { position: relative; min-height: clamp(420px, 46vw, 640px); display: flex; align-items: flex-end; color: #FAFAF7; overflow: hidden; }
+.lifestyle-banner img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.lifestyle-banner::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(15,18,14,.1) 20%, rgba(15,18,14,.7) 100%); }
+.lifestyle-banner__content { position: relative; width: 100%; box-sizing: border-box; padding: clamp(28px, 5vw, 64px); display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 24px; z-index: 1; }
+
+/* Help tabs */
+.tab-panel[hidden] { display: none; }
+
+/* Stockists */
+.stockist-head { background: var(--color-bg-2); border-radius: var(--radius); padding: 18px; display: flex; flex-direction: column; gap: 6px; }
+.stockist-list { display: flex; flex-direction: column; }
+.stockist-list a { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 60px; border-bottom: 1px solid var(--color-hairline); }
+.stockist-list a .area { font-size: 13px; color: var(--color-soft); }
+
+/* Journal */
+.journal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 40px 24px; }
+.journal-card { display: flex; flex-direction: column; gap: 10px; }
+.journal-card__media { aspect-ratio: 4/3; border-radius: 4px; overflow: hidden; background: var(--color-sand); }
+.journal-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.journal-card__placeholder { aspect-ratio: 4/3; border-radius: 4px; background: repeating-linear-gradient(135deg, #EFEBE3 0 10px, #E7E2D8 10px 20px); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; color: var(--color-soft); }
+.article-body { width: 100%; max-width: 680px; display: flex; flex-direction: column; gap: 18px; font-size: 17px; line-height: 1.65; margin: 0 auto; }
+.article-steps { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; border-top: 1px solid var(--color-hairline); }
+.article-steps li { display: grid; grid-template-columns: 36px 1fr; gap: 8px; padding: 16px 0; border-bottom: 1px solid var(--color-hairline); }
+.article-steps li span:first-child { font-family: var(--font-mono); font-size: 14px; color: var(--color-soft); padding-top: 3px; }
+
+/* Misc utility */
+.devanagari { font-family: var(--font-devanagari); }
+.checkout-note, .newsletter-note { font-size: 13px; color: var(--color-accent); margin-top: 4px; }
+.checkout-note[hidden], .newsletter-note[hidden] { display: none; }
+.kicker { font-family: var(--font-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--color-soft); }
+.max-prose { max-width: 640px; }
+.center-cta { padding: clamp(64px, 9vw, 120px) 20px; display: flex; flex-direction: column; align-items: center; gap: 22px; text-align: center; }
+
+/* Sticky mobile buy bar (fixed, shown only on PDP routes) */
+.pdp-buybar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--color-bg); border-top: 1px solid var(--color-hairline); padding: 10px 16px; display: none; align-items: center; gap: 12px; }
+body[data-pdp-active="1"] .pdp-buybar { display: flex; }
+@media (min-width: 900px) { .pdp-buybar { display: none !important; } }
+.pdp-buybar__img { width: 44px; height: 44px; flex: 0 0 44px; border-radius: 4px; overflow: hidden; background: var(--color-sand); }
+.pdp-buybar__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+body[data-pdp-active="1"] { padding-bottom: 68px; }
+@media (min-width: 900px) { body[data-pdp-active="1"] { padding-bottom: 0; } }
+
+@media (max-width: 749px) {
+  .pdp-grid, .home-hero, .hero-media { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="site-header-wrap">
+  <a class="announcement-bar" href="#/sano"><span class="eyebrow">NEW</span><span>Sano Packable Daypack</span><span aria-hidden="true">→</span></a>
+  <header class="site-header">
+    <a class="site-header__logo" href="#/"><img src="images/logo-horizontal-ink.png" alt="Yachu"></a>
+    <nav class="site-header__nav" data-main-nav>
+      <a href="#/shop" data-nav="shop">Shop</a>
+      <a href="#/hammock" data-nav="hammock">Hammock</a>
+      <a href="#/sano" data-nav="sano">Daypack</a>
+      <a href="#/story" data-nav="story">Our story</a>
+      <a href="#/help" data-nav="help">Help</a>
+    </nav>
+    <div class="site-header__actions">
+      <a href="#/shop" aria-label="Search"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5"></circle><path d="M12 12l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg></a>
+      <button type="button" class="site-header__cart-count" data-cart-toggle>Cart (<span data-cart-count>0</span>)</button>
+      <button type="button" class="header-menu-toggle icon-btn" data-menu-toggle aria-label="Menu" aria-expanded="false">
+        <svg width="20" height="14" viewBox="0 0 20 14" fill="none"><path d="M1 1h18M1 7h18M1 13h18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
+      </button>
+    </div>
+    <nav class="mobile-nav" data-mobile-nav hidden>
+      <a href="#/shop">Shop<span class="chev">›</span></a>
+      <a href="#/hammock">Hammock<span class="chev">›</span></a>
+      <a href="#/sano">Daypack<span class="chev">›</span></a>
+      <a href="#/story">Our story<span class="chev">›</span></a>
+      <a href="#/help">Help<span class="chev">›</span></a>
+    </nav>
+  </header>
+
+  <div class="cart-drawer__backdrop" data-cart-backdrop hidden></div>
+  <aside class="cart-drawer" data-cart-drawer aria-label="Cart" hidden>
+    <div class="cart-drawer__head">
+      <strong>Your cart (<span data-cart-count-2>0</span>)</strong>
+      <button type="button" class="cart-drawer__close" data-cart-close aria-label="Close cart">×</button>
+    </div>
+    <div data-cart-drawer-body></div>
+  </aside>
+</div>
+
+<main id="main">
+<!-- ============================== HOME ============================== -->
+<section data-route="home" aria-label="Home">
+  <div class="home-hero">
+    <div class="home-hero__copy">
+      <div class="kicker">Airlite Hammock Set</div>
+      <h1 class="h1 h1--display text-balance">A full hammock setup. <span class="text-accent">225&nbsp;grams.</span></h1>
+      <p class="body-lg text-soft text-pretty" style="max-width:40ch">Hammock, two tree straps and two carabiners, all in one pouch. Handmade in Nepal.</p>
+      <a href="#/hammock" style="display:flex;align-items:center;gap:10px;font-size:15px"><span class="stars text-accent">★★★★★</span><span><strong>4.9</strong> <span class="text-soft">from 59 reviews</span></span></a>
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <span class="body-sm text-soft">Color: <strong class="text-ink" data-home-color-name style="color:var(--color-ink)">Orange</strong></span>
+        <div class="swatch-row" data-home-swatches role="group" aria-label="Hammock color">
+          <button type="button" class="swatch is-active" data-color="orange" style="background:#D9531E" aria-label="Orange"></button>
+          <button type="button" class="swatch" data-color="blue" style="background:#2E7EA6" aria-label="Blue"></button>
+          <button type="button" class="swatch" data-color="green" style="background:#5A6B3E" aria-label="Green"></button>
+        </div>
+      </div>
+      <div class="stack gap-2" style="margin-top:4px">
+        <button type="button" class="btn btn--primary" data-home-add-hammock><span data-label>Add to cart</span><span class="btn-divider"></span><span class="mono">$119</span></button>
+        <div style="display:flex;align-items:center;gap:10px;font-size:14px" class="text-soft">
+          <svg width="18" height="14" viewBox="0 0 18 14" fill="none" aria-hidden="true"><path d="M1 1.5h10v8.5H1zM11 4.5h3.2L17 7.6V10h-6" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"></path><circle cx="4.5" cy="11.5" r="1.6" stroke="currentColor" stroke-width="1.3"></circle><circle cx="13.5" cy="11.5" r="1.6" stroke="currentColor" stroke-width="1.3"></circle></svg>
+          <span><span data-free-txt>Free delivery over $90</span>: <strong style="color:var(--color-ink)" data-days-txt>5–9 days</strong></span>
+        </div>
+        <div class="stack gap-1 body-sm text-soft">
+          <a href="#/help" style="display:flex;align-items:center;gap:10px"><svg width="18" height="16" viewBox="0 0 18 16" fill="none" aria-hidden="true"><path d="M9 1l6.5 2.5V8c0 3.6-2.8 6.1-6.5 7-3.7-.9-6.5-3.4-6.5-7V3.5L9 1z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"></path><path d="M6 8l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg><span><strong style="color:var(--color-ink);font-weight:500">30-day exchange promise</strong> <span class="link-underline">How it works</span></span></a>
+          <span style="padding-left:28px">Apple Pay · Google Pay · PayPal · Shop Pay</span>
+        </div>
+        <div class="upsell-panel" data-home-upsell hidden>
+          <div class="upsell-panel__head"><strong>Hammock Set added ✓</strong><button type="button" class="icon-btn" data-home-upsell-close aria-label="Close" style="width:28px;height:28px;font-size:18px;color:var(--color-soft)">×</button></div>
+          <div class="upsell-panel__row">
+            <span class="upsell-panel__img"><img src="images/sano-studio.png" alt=""></span>
+            <span class="stack" style="gap:2px;min-width:0"><span class="mono body-sm text-soft" style="letter-spacing:.08em">GOES WITH IT</span><span style="font-size:15px;font-weight:500">Sano Packable Daypack</span><span class="body-sm text-soft">Packs to 14 × 16 × 4 cm · 255 g</span></span>
+          </div>
+          <button type="button" class="btn btn--secondary" data-home-add-sano-upsell><span data-label>Add the Sano Packable Daypack</span><span class="mono">$94</span></button>
+        </div>
+      </div>
+    </div>
+    <div class="home-hero__photo">
+      <img data-home-hero-img src="images/mountain-orange.jpg" alt="The orange Airlite Hammock hung at Api Base Camp, Nepal, 4,200 m">
+      <div class="home-hero__photo-cap"><span data-home-photo-l>API BASE CAMP · 4,200 M</span><span data-home-photo-r>FAR-WEST NEPAL</span></div>
+    </div>
+  </div>
+
+  <div class="quote-track" data-carousel>
+    <figure class="quote-card"><blockquote>&ldquo;Extremely portable yet strong, comfortable, and lightweight.&rdquo;</blockquote><figcaption class="body-sm text-soft"><span style="letter-spacing:1px;color:var(--color-ink)">★★★★★</span> Angela S. · Verified buyer</figcaption></figure>
+    <figure class="quote-card"><blockquote>&ldquo;The quality is exceptional.&rdquo;</blockquote><figcaption class="body-sm text-soft"><span style="letter-spacing:1px;color:var(--color-ink)">★★★★★</span> Shashwat D. · Verified buyer</figcaption></figure>
+    <figure class="quote-card"><blockquote>&ldquo;Feels like carrying your own luxury everywhere you go.&rdquo;</blockquote><figcaption class="body-sm text-soft"><span style="letter-spacing:1px;color:var(--color-ink)">★★★★★</span> Sarita S. · Verified buyer</figcaption></figure>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-tile"><div class="stat-tile__value">4.9<span class="text-accent" style="font-size:.7em">★</span></div><div class="stat-tile__label">From 59 reviews</div></div>
+    <div class="stat-tile"><div class="stat-tile__value">160 kg</div><div class="stat-tile__label">Max load</div></div>
+    <div class="stat-tile"><div class="stat-tile__value">60 s</div><div class="stat-tile__label">To hang it, no knots</div></div>
+    <div class="stat-tile"><div class="stat-tile__value">30 days</div><div class="stat-tile__label">Exchange period</div></div>
+  </div>
+
+  <section class="section cqi px" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:clamp(28px,5vw,72px);align-items:center">
+    <div style="background:var(--color-sand);border-radius:var(--radius);padding:clamp(20px,3vw,40px);display:flex;align-items:center;justify-content:center;aspect-ratio:4/3">
+      <img data-home-ledger-img src="images/cut-hammock-orange.webp" alt="The Airlite hammock laid flat" style="width:100%;max-height:100%;object-fit:contain">
+    </div>
+    <div class="stack gap-4">
+      <div class="stack gap-2">
+        <div class="kicker">In the pouch</div>
+        <h2 class="h2">Everything you need to hang it.</h2>
+        <p class="body text-soft">No extra parts to buy. Every gram, accounted for.</p>
+      </div>
+      <div class="ledger">
+        <div class="ledger-row">
+          <span class="ledger-row__thumb"><img data-home-ledger-pouch class="is-contain" src="images/cut-pouch-orange.webp" alt="The hammock packed in its pouch"></span>
+          <span class="ledger-row__body"><span>Hammock</span><span class="ledger-row__note">275 × 130 cm, holds 160 kg</span></span>
+          <span class="ledger-row__val">148 g</span>
+        </div>
+        <div class="ledger-row">
+          <span class="ledger-row__thumb"><img class="is-contain" src="images/strap-coil.png" alt="Two Airlite tree straps, coiled"></span>
+          <span class="ledger-row__body"><span>Tree straps ×2</span><span class="ledger-row__note">3 m each, no knots</span></span>
+          <span class="ledger-row__val">65 g</span>
+        </div>
+        <div class="ledger-row">
+          <span class="ledger-row__thumb"><img class="is-cover" src="images/carabiner-rope.png" alt="A Yachu 5 kN carabiner clipped to the suspension cord"></span>
+          <span class="ledger-row__body"><span>Carabiners ×2</span><span class="ledger-row__note">5 kN rated</span></span>
+          <span class="ledger-row__val">12 g</span>
+        </div>
+        <div class="ledger-total"><span class="body text-soft text-pretty">Packed 14 × 8 cm, about a smartphone</span><span class="ledger-total__val">225 g</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-dark cqi" style="padding:clamp(56px,8vw,112px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:clamp(28px,5vw,72px);align-items:center">
+    <div style="padding-left:clamp(0px,5vw,64px);min-width:0">
+      <div class="carousel" data-carousel style="padding-left:20px">
+        <figure class="dark-shot" style="background:#2A2A2A"><img src="images/sano-held.png" alt="The black Sano Packable Daypack held by its top handle" style="object-fit:cover"><figcaption>40 × 28 × 10 CM</figcaption></figure>
+        <figure class="dark-shot" style="background:#FFFFFF"><img src="images/sano-studio.png" alt="The Sano Packable Daypack next to itself packed into its front pocket" style="object-fit:contain"><figcaption>PACKS TO 14 × 16 × 4 CM</figcaption></figure>
+        <figure class="dark-shot" style="background:#2A2A2A"><img src="images/sano-laptop.png" alt="A laptop sliding into the Sano 14-inch sleeve" style="object-fit:cover"><figcaption>14&quot; LAPTOP SLEEVE</figcaption></figure>
+        <figure class="dark-shot" style="background:#2A2A2A"><img src="images/sano-strap.png" alt="Close-up of the grid fabric and sternum strap buckle" style="object-fit:cover"><figcaption>210D UHMWPE / NYLON</figcaption></figure>
+      </div>
+    </div>
+    <div class="stack gap-4" style="padding:0 var(--gutter) 0 0">
+      <div class="stack gap-3">
+        <div style="display:flex;align-items:center;gap:12px" class="mono body-sm" style="letter-spacing:.1em;text-transform:uppercase"><span class="accent-chip mono body-sm">New</span><span class="text-soft" style="opacity:.75">Sano Packable Daypack · <span class="devanagari">सानो</span></span></div>
+        <h2 class="h2 text-balance">255 g. The daypack that disappears until you need it.</h2>
+        <p class="body-lg text-soft text-pretty" style="opacity:.8;max-width:44ch">'Sano' (<span class="devanagari">सानो</span>) means small in Nepali. It packs into its own front pocket and opens up to 18 L for the day.</p>
+      </div>
+      <div class="dark-ledger">
+        <div class="dark-ledger-row"><span>Capacity</span><span class="dark-ledger-row__fill"></span><span class="dark-ledger-row__val">18 L</span></div>
+        <div class="dark-ledger-row"><span>Fabric</span><span class="dark-ledger-row__fill"></span><span class="dark-ledger-row__val">Waterproof</span></div>
+        <div class="dark-ledger-row"><span>Zipper</span><span class="dark-ledger-row__fill"></span><span class="dark-ledger-row__val">YKK&reg; AquaGuard</span></div>
+        <div class="dark-ledger-row"><span>Pockets</span><span class="dark-ledger-row__fill"></span><span class="dark-ledger-row__val">3 outside</span></div>
+        <div class="dark-ledger-row"><span>Travel</span><span class="dark-ledger-row__fill"></span><span class="dark-ledger-row__val">Luggage pass-through</span></div>
+      </div>
+      <div class="stack gap-2">
+        <button type="button" class="btn btn--on-dark" data-home-add-sano><span data-label>Add the Sano Packable Daypack</span><span class="btn-divider"></span><span class="mono">$94</span></button>
+        <span class="body-sm" style="opacity:.7">Black · Waterproof · Made in Nepal · <span data-free-txt-2>Free delivery over $90</span></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section px" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:clamp(28px,5vw,72px);align-items:start">
+    <div class="stack gap-3">
+      <h2 class="h2 text-balance" style="max-width:13ch">Build your pack</h2>
+      <p class="body text-soft" style="max-width:42ch">Take 2 for 10% off, or 3 or more for 20% off.</p>
+      <div class="preset-row" data-pack-presets>
+        <button type="button" class="preset-chip is-active" data-preset="day">Day out <span class="preset-chip__w">480 g</span></button>
+        <button type="button" class="preset-chip" data-preset="overnight">Overnight <span class="preset-chip__w">935 g</span></button>
+        <button type="button" class="preset-chip" data-preset="everything">Everything <span class="preset-chip__w">999 g</span></button>
+      </div>
+    </div>
+    <div class="checklist">
+      <div data-pack-checklist></div>
+      <div class="checklist-summary">
+        <div style="display:flex;justify-content:space-between" class="body text-soft"><span>Pack weight</span><span class="mono" data-pack-weight>480 g</span></div>
+        <div style="display:flex;justify-content:space-between" class="body text-accent" data-pack-disc-row hidden><span data-pack-disc-label>2 items, 10% off</span><span class="mono" data-pack-disc>−$0</span></div>
+        <button type="button" class="btn btn--primary btn--block" data-pack-add style="margin-top:6px"><span data-label>Add 2 items</span><span class="btn-divider"></span><span class="mono" data-pack-total>$213</span></button>
+        <p class="body-sm text-soft" style="margin:0;text-align:center" data-pack-nudge></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="border-top:1px solid var(--color-hairline)">
+    <div class="carousel-head">
+      <h2 class="h2">All gear</h2>
+      <div class="carousel-controls">
+        <button type="button" class="round-btn" data-carousel-prev aria-label="Previous">‹</button>
+        <button type="button" class="round-btn" data-carousel-next aria-label="Next">›</button>
+      </div>
+    </div>
+    <div class="carousel" data-carousel>
+      <a href="#/hammock" class="product-card" style="flex:0 0 clamp(240px,26cqi,330px);scroll-snap-align:start">
+        <div class="product-card__media" style="background:var(--color-sand)"><img src="images/prod-orange-sand.jpg" alt="Airlite Hammock Set"></div>
+        <div class="product-card__row"><span>Airlite Hammock Set</span><span class="mono">$119</span></div>
+        <div class="product-card__meta">Hammock, straps, carabiners · 225 g</div>
+      </a>
+      <a href="#/sano" class="product-card" style="flex:0 0 clamp(240px,26cqi,330px);scroll-snap-align:start">
+        <div class="product-card__media" style="background:#fff"><img src="images/sano-studio.png" alt="Sano Packable Daypack"><span class="badge-new product-card__badge">NEW</span></div>
+        <div class="product-card__row"><span>Sano Packable Daypack</span><span class="mono">$94</span></div>
+        <div class="product-card__meta">Black · 18 L, packs into itself · 255 g</div>
+      </a>
+      <a href="#/product/tarp" class="product-card" style="flex:0 0 clamp(240px,26cqi,330px);scroll-snap-align:start">
+        <div class="product-card__media" style="background:var(--color-sand)"><img src="images/tarp-forest.png" alt="Airlite Tarp"></div>
+        <div class="product-card__row"><span>Airlite Tarp</span><span class="mono">$63</span></div>
+        <div class="product-card__meta">3 × 3 m, packs to 10 × 18 cm · 450 g</div>
+      </a>
+      <a href="#/product/net" class="product-card" style="flex:0 0 clamp(240px,26cqi,330px);scroll-snap-align:start">
+        <div class="product-card__media" style="background:#fff"><img src="images/net-studio.png" alt="Airlite Bug Net"></div>
+        <div class="product-card__row"><span>Airlite Bug Net</span><span class="mono">$50</span></div>
+        <div class="product-card__meta">2.8 × 1.3 m, packs to 14 × 9 cm · 260 g</div>
+      </a>
+      <a href="#/product/straps" class="product-card" style="flex:0 0 clamp(240px,26cqi,330px);scroll-snap-align:start">
+        <div class="product-card__media" style="background:var(--color-sand)"><img src="images/strap-tree.png" alt="Airlite Tree Straps"></div>
+        <div class="product-card__row"><span>Airlite Tree Straps</span><span class="mono">View</span></div>
+        <div class="product-card__meta">Spare pair, 3 m each · 65 g</div>
+      </a>
+      <a href="#/product/carabiners" class="product-card" style="flex:0 0 clamp(240px,26cqi,330px);scroll-snap-align:start">
+        <div class="product-card__media" style="background:var(--color-sand)"><img src="images/carabiner-inuse.png" alt="5 kN Carabiners"></div>
+        <div class="product-card__row"><span>5 kN Carabiners</span><span class="mono">View</span></div>
+        <div class="product-card__meta">Spare pair, aluminium · 12 g</div>
+      </a>
+    </div>
+  </section>
+
+  <div class="lifestyle-banner">
+    <img src="images/highline-graded.jpg" alt="Someone lying back in a Yachu hammock on a highline above the forest at Bethanchowk, 3,000 m">
+    <div class="lifestyle-banner__content">
+      <div class="stack gap-3">
+        <div class="mono body-sm" style="letter-spacing:.1em">BETHANCHOWK · 3,000 M · MADE IN NEPAL</div>
+        <h2 class="h1--display" style="margin:0">From Himalayas<br>to the world</h2>
+        <p class="body text-pretty" style="max-width:40ch;opacity:.9;margin:0">Designed in Lalitpur and made by our own team in Nepal. <a href="#/story" class="link-underline">Read our story</a></p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a href="#/hammock" class="btn btn--light">Shop the hammock</a>
+        <a href="#/sano" class="btn" style="box-shadow:inset 0 0 0 1px #FAFAF7;color:#FAFAF7">Shop the daypack</a>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ============================== SHOP ============================== -->
+<section data-route="shop" aria-label="Shop">
+  <div class="section px stack gap-4">
+    <div class="stack gap-2">
+      <div class="kicker">Shop</div>
+      <h1 class="h1 h1--display">All gear</h1>
+    </div>
+    <div class="chip-row" data-shop-chips role="group" aria-label="Filter by category">
+      <button type="button" class="chip is-active" data-cat="all">All <span class="chip__count">6</span></button>
+      <button type="button" class="chip" data-cat="hammock">Hammocks <span class="chip__count">1</span></button>
+      <button type="button" class="chip" data-cat="pack">Daypacks <span class="chip__count">1</span></button>
+      <button type="button" class="chip" data-cat="shelter">Shelter <span class="chip__count">2</span></button>
+      <button type="button" class="chip" data-cat="accessory">Accessories <span class="chip__count">2</span></button>
+    </div>
+    <div class="grid-cards" data-shop-grid>
+      <a href="#/hammock" class="product-card" data-cat="hammock">
+        <div class="product-card__media" style="background:var(--color-sand)"><img src="images/prod-orange-sand.jpg" alt="Airlite Hammock Set"></div>
+        <div class="product-card__row"><span>Airlite Hammock Set</span><span class="mono">$119</span></div>
+        <div class="product-card__meta">Hammock, straps, carabiners · 225 g</div>
+      </a>
+      <a href="#/sano" class="product-card" data-cat="pack">
+        <div class="product-card__media" style="background:#fff"><img src="images/sano-studio.png" alt="Sano Packable Daypack"><span class="badge-new product-card__badge">NEW</span></div>
+        <div class="product-card__row"><span>Sano Packable Daypack</span><span class="mono">$94</span></div>
+        <div class="product-card__meta">Black · 18 L, packs into itself · 255 g</div>
+      </a>
+      <a href="#/product/tarp" class="product-card" data-cat="shelter">
+        <div class="product-card__media" style="background:var(--color-sand)"><img src="images/tarp-forest.png" alt="Airlite Tarp"></div>
+        <div class="product-card__row"><span>Airlite Tarp</span><span class="mono">$63</span></div>
+        <div class="product-card__meta">3 × 3 m, packs to 10 × 18 cm · 450 g</div>
+      </a>
+      <a href="#/product/net" class="product-card" data-cat="shelter">
+        <div class="product-card__media" style="background:#fff"><img src="images/net-studio.png" alt="Airlite Bug Net"></div>
+        <div class="product-card__row"><span>Airlite Bug Net</span><span class="mono">$50</span></div>
+        <div class="product-card__meta">2.8 × 1.3 m, packs to 14 × 9 cm · 260 g</div>
+      </a>
+      <a href="#/product/straps" class="product-card" data-cat="accessory">
+        <div class="product-card__media" style="background:var(--color-sand)"><img src="images/strap-tree.png" alt="Airlite Tree Straps"></div>
+        <div class="product-card__row"><span>Airlite Tree Straps</span><span class="mono">View</span></div>
+        <div class="product-card__meta">Spare pair, 3 m each · 65 g</div>
+      </a>
+      <a href="#/product/carabiners" class="product-card" data-cat="accessory">
+        <div class="product-card__media" style="background:var(--color-sand)"><img src="images/carabiner-inuse.png" alt="5 kN Carabiners"></div>
+        <div class="product-card__row"><span>5 kN Carabiners</span><span class="mono">View</span></div>
+        <div class="product-card__meta">Spare pair, aluminium · 12 g</div>
+      </a>
+    </div>
+    <div style="display:flex;justify-content:center;gap:12px" class="mono body-sm text-soft" style="letter-spacing:.08em;padding-top:16px"><span>FREE WORLDWIDE SHIPPING OVER $90</span><span>/</span><span>30-DAY EXCHANGE</span></div>
+  </div>
+</section>
+<!-- ============================== HAMMOCK PDP ============================== -->
+<section data-route="hammock" aria-label="Airlite Hammock Set">
+  <nav class="breadcrumb"><a href="#/">Home</a><span>/</span><a href="#/shop">Hammocks</a><span>/</span><span class="current">Airlite Hammock Set</span></nav>
+  <div class="pdp-grid">
+    <div class="pdp-gallery" data-hammock-gallery></div>
+    <div class="pdp-info">
+      <div class="kicker">Handmade in Nepal</div>
+      <h1 class="h1" style="margin-top:-6px">Airlite Hammock Set</h1>
+      <a href="#hammock-reviews" style="display:flex;align-items:center;gap:10px;font-size:15px"><span class="stars">★★★★★</span><span><strong>4.9</strong> <span class="text-soft link-underline">59 reviews</span></span></a>
+      <div class="mono" style="font-size:24px">$119</div>
+      <p class="body text-soft" style="margin:0">A complete hammock setup in just 225 g.</p>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:4px">
+        <span class="body-sm text-soft">Color: <strong style="color:var(--color-ink)" data-hammock-color-name>Orange</strong></span>
+        <div class="swatch-row" data-hammock-swatches role="group" aria-label="Hammock color">
+          <button type="button" class="swatch is-active" data-color="Orange" style="background:#D9531E" aria-label="Orange"></button>
+          <button type="button" class="swatch" data-color="Blue" style="background:#2E7EA6" aria-label="Blue"></button>
+          <button type="button" class="swatch" data-color="Green" style="background:#5A6B3E" aria-label="Green"></button>
+        </div>
+      </div>
+
+      <div class="addon-box">
+        <div class="addon-box__head">Add shelter for a night out</div>
+        <button type="button" class="addon-row" data-addon="tarp">
+          <span class="addon-row__box" data-addon-box>&nbsp;</span>
+          <span class="addon-row__img"><img src="images/tarp-sack.png" alt=""></span>
+          <span class="addon-row__body"><span style="font-size:15px;font-weight:500">Airlite Tarp</span><span style="font-size:12px;color:var(--color-soft)">450 g · 3 × 3 m ripstop nylon</span></span>
+          <span class="mono" style="font-size:14px">+$63</span>
+        </button>
+        <button type="button" class="addon-row" data-addon="net">
+          <span class="addon-row__box" data-addon-box>&nbsp;</span>
+          <span class="addon-row__img"><img src="images/net-sack.png" alt=""></span>
+          <span class="addon-row__body"><span style="font-size:15px;font-weight:500">Airlite Bug Net</span><span style="font-size:12px;color:var(--color-soft)">260 g · polyester mesh</span></span>
+          <span class="mono" style="font-size:14px">+$50</span>
+        </button>
+        <div class="addon-note" data-hammock-kit-note>Add one for 10% off, or both for 20% off.</div>
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <div class="stepper stepper--dark" data-qty-stepper>
+          <button type="button" data-qty-dir="-1" aria-label="Fewer">−</button>
+          <span class="mono" data-hammock-qty>1</span>
+          <button type="button" data-qty-dir="1" aria-label="More">+</button>
+        </div>
+        <button type="button" class="btn btn--primary" style="flex:1" data-hammock-add><span data-label>Add to cart</span><span class="btn-divider"></span><span class="mono" data-hammock-total>$119</span></button>
+      </div>
+
+      <div class="stack gap-1 body-sm text-soft">
+        <span><span data-free-txt>Free delivery over $90</span>: <strong style="color:var(--color-ink)" data-days-txt>5–9 days</strong></span>
+        <a href="#/help"><strong style="color:var(--color-ink);font-weight:500">30-day exchange promise</strong> <span class="link-underline">How it works</span></a>
+        <span style="font-size:13px">Apple Pay · Google Pay · PayPal · Shop Pay</span>
+      </div>
+
+      <div class="accordion" style="margin-top:6px" data-accordion-container>
+        <div class="accordion-item">
+          <button type="button" class="accordion-item__trigger" data-accordion-trigger data-accordion-group="hammock-specs" aria-controls="hm-acc-0" aria-expanded="false"><span>What's included</span><span class="accordion-item__sign" data-accordion-sign>+</span></button>
+          <div class="accordion-item__panel" id="hm-acc-0" hidden>
+            <div class="accordion-row"><span>Hammock body</span><span class="accordion-row__val">×1</span></div>
+            <div class="accordion-row"><span>Ultralight tree straps</span><span class="accordion-row__val">×2</span></div>
+            <div class="accordion-row"><span>5 kN carabiners</span><span class="accordion-row__val">×2</span></div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <button type="button" class="accordion-item__trigger" data-accordion-trigger data-accordion-group="hammock-specs" aria-controls="hm-acc-1" aria-expanded="false"><span>Specs</span><span class="accordion-item__sign" data-accordion-sign>+</span></button>
+          <div class="accordion-item__panel" id="hm-acc-1" hidden>
+            <div class="accordion-row accordion-row--group">Weight</div>
+            <div class="accordion-row"><span>Complete set</span><span class="accordion-row__val">225 g</span></div>
+            <div class="accordion-row"><span>Hammock</span><span class="accordion-row__val">148 g</span></div>
+            <div class="accordion-row"><span>Tree straps, pair</span><span class="accordion-row__val">65 g</span></div>
+            <div class="accordion-row"><span>Carabiners, pair</span><span class="accordion-row__val">12 g</span></div>
+            <div class="accordion-row accordion-row--group">Hammock</div>
+            <div class="accordion-row"><span>Size</span><span class="accordion-row__val">275 × 130 cm</span></div>
+            <div class="accordion-row"><span>Fabric</span><span class="accordion-row__val">20D mono ripstop nylon</span></div>
+            <div class="accordion-row"><span>Max load</span><span class="accordion-row__val">160 kg</span></div>
+            <div class="accordion-row accordion-row--group">Tree straps</div>
+            <div class="accordion-row"><span>Length</span><span class="accordion-row__val">3 m each</span></div>
+            <div class="accordion-row"><span>Build</span><span class="accordion-row__val">1.5 m webbing + 1.5 m whoopie sling</span></div>
+            <div class="accordion-row"><span>Material</span><span class="accordion-row__val">UHMWPE (25 mm webbing, 3 mm rope)</span></div>
+            <div class="accordion-row accordion-row--group">Carabiners</div>
+            <div class="accordion-row"><span>Material</span><span class="accordion-row__val">A7075 aluminum, 5 kN (500 kg)</span></div>
+            <div class="accordion-row accordion-row--group">Packed</div>
+            <div class="accordion-row"><span>Size</span><span class="accordion-row__val">14 × 8 cm</span></div>
+            <div class="accordion-row"><span>Setup</span><span class="accordion-row__val">~60 s, no knots</span></div>
+            <div class="accordion-row"><span>Made in</span><span class="accordion-row__val">Nepal</span></div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <button type="button" class="accordion-item__trigger" data-accordion-trigger data-accordion-group="hammock-specs" aria-controls="hm-acc-2" aria-expanded="false"><span>Materials &amp; care</span><span class="accordion-item__sign" data-accordion-sign>+</span></button>
+          <div class="accordion-item__panel" id="hm-acc-2" hidden>
+            <div class="accordion-row"><span>Fabric</span><span class="accordion-row__val">20D mono ripstop nylon</span></div>
+            <div class="accordion-row"><span>Whoopie sling</span><span class="accordion-row__val">UHMWPE webbing and rope</span></div>
+            <div class="accordion-row"><span>Carabiner</span><span class="accordion-row__val">A7075 aluminium</span></div>
+            <div class="accordion-row accordion-row--group">Care</div>
+            <div class="accordion-row"><span>Do not drag on the ground it can tear the fabric.</span></div>
+            <div class="accordion-row"><span>Keep it away from fire and sharp objects.</span></div>
+            <div class="accordion-row"><span>Take your shoes off before getting in.</span></div>
+            <div class="accordion-row"><span>Avoid long exposure to sun and rain.</span></div>
+            <div class="accordion-row"><span>If it's wet, dry it fully before you pack it away.</span></div>
+            <div class="accordion-row"><span>If you see any damage or defect, stop using it.</span></div>
+            <div class="accordion-row"><span>Max load 160 kg. Not for swinging or jumping.</span></div>
+            <div class="accordion-row"><span>Leave no trace: protect the trees, pack out what you bring.</span></div>
+            <div class="accordion-row accordion-row--group">Caution</div>
+            <div class="accordion-row"><span>Hang it at a height that's safe if you fall. You use Yachu gear at your own risk.</span></div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <button type="button" class="accordion-item__trigger" data-accordion-trigger data-accordion-group="hammock-specs" aria-controls="hm-acc-3" aria-expanded="false"><span>Shipping &amp; exchange</span><span class="accordion-item__sign" data-accordion-sign>+</span></button>
+          <div class="accordion-item__panel" id="hm-acc-3" hidden>
+            <div class="accordion-row"><span>Within Nepal</span><span class="accordion-row__val">1–2 days</span></div>
+            <div class="accordion-row"><span>Japan</span><span class="accordion-row__val">3–5 days</span></div>
+            <div class="accordion-row"><span>Rest of the world</span><span class="accordion-row__val">5–9 days</span></div>
+            <div class="accordion-row"><span>Free delivery in Nepal. Worldwide, including Japan, free over $90 and $19 below that. Exchange within 30 days of delivery.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-tile"><div class="stat-tile__value">160 kg</div><div class="stat-tile__label">Max load</div></div>
+    <div class="stat-tile"><div class="stat-tile__value">60 s</div><div class="stat-tile__label">Setup, no knots</div></div>
+    <div class="stat-tile"><div class="stat-tile__value">225 g</div><div class="stat-tile__label">Complete set</div></div>
+    <div class="stat-tile"><div class="stat-tile__value">30 days</div><div class="stat-tile__label">Easy exchange</div></div>
+  </div>
+
+  <section class="section cqi px" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:clamp(28px,5vw,64px);align-items:center">
+    <div class="stack gap-4">
+      <div class="stack gap-2">
+        <div class="kicker">Setup</div>
+        <h2 class="h2">Up in sixty seconds.</h2>
+      </div>
+      <ol style="display:flex;flex-direction:column">
+        <li style="display:flex;gap:18px;padding:18px 0;border-top:1px solid var(--color-hairline)"><span class="mono body-sm text-soft" style="padding-top:3px">01</span><div class="stack gap-1"><h3 class="h3">Wrap the straps</h3><p class="body text-soft" style="margin:0">One around each strong support or tree.</p></div></li>
+        <li style="display:flex;gap:18px;padding:18px 0;border-top:1px solid var(--color-hairline)"><span class="mono body-sm text-soft" style="padding-top:3px">02</span><div class="stack gap-1"><h3 class="h3">Clip in</h3><p class="body text-soft" style="margin:0">The carabiners come attached to the hammock. Clip each one to a strap.</p></div></li>
+        <li style="display:flex;gap:18px;padding:18px 0;border-top:1px solid var(--color-hairline)"><span class="mono body-sm text-soft" style="padding-top:3px">03</span><div class="stack gap-1"><h3 class="h3">Adjust and lie back</h3><p class="body text-soft" style="margin:0">Pull the whoopie slings to set a 30° sag. Lie slightly diagonal to sleep flat.</p></div></li>
+      </ol>
+    </div>
+    <div style="position:relative;aspect-ratio:16/9;background:#211F1B;border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#FAFAF7">
+      <span style="width:64px;height:64px;border-radius:50%;box-shadow:inset 0 0 0 1.5px rgba(250,250,247,.7);display:flex;align-items:center;justify-content:center"><span style="width:0;height:0;border-left:16px solid #FAFAF7;border-top:10px solid transparent;border-bottom:10px solid transparent;margin-left:4px"></span></span>
+      <span class="mono body-sm" style="letter-spacing:.1em;opacity:.75;text-align:center;padding:0 16px">SETUP VIDEO · 16:9 · ADD YOUR OWN</span>
+      <span style="position:absolute;left:14px;bottom:12px" class="mono body-sm" style="opacity:.6">MUTED · LOOP · 0:45</span>
+    </div>
+  </section>
+
+  <section class="section" style="padding-bottom:0">
+    <div class="stack gap-2" style="padding:0 var(--gutter) 28px">
+      <div class="kicker">In the field</div>
+      <h2 class="h2">Tested where it's made.</h2>
+    </div>
+    <div class="carousel" data-carousel style="padding-bottom:clamp(56px,8vw,104px)">
+      <figure class="field-shot"><img src="images/mountain-orange.jpg" alt="The orange Airlite Hammock at Api Base Camp" style="object-position:70% 50%"><figcaption><span>API BASE CAMP · 4,200 M</span><span style="opacity:.8">FAR-WEST NEPAL</span></figcaption></figure>
+      <figure class="field-shot"><img src="images/forest-blue.jpg" alt="The blue Airlite Hammock in Makalu Barun Valley" style="object-position:28% 55%"><figcaption><span>MAKALU BARUN VALLEY · 3,600 M</span><span style="opacity:.8">EASTERN NEPAL</span></figcaption></figure>
+      <figure class="field-shot"><img src="images/manang-blue.jpg" alt="Someone sitting in the blue Airlite Hammock under pine trees in Manang" style="object-position:50% 40%"><figcaption><span>MANANG · 3,100 M</span><span style="opacity:.8">ANNAPURNA REGION</span></figcaption></figure>
+      <figure class="field-shot"><img src="images/langtang-blue.jpg" alt="The blue Airlite Hammock slung between boulders in Langtang" style="object-position:12% 50%"><figcaption><span>LANGTANG · 3,100 M</span><span style="opacity:.8">LANGTANG NATIONAL PARK</span></figcaption></figure>
+      <figure class="field-shot"><img src="images/highline-graded.jpg" alt="A Yachu hammock on a highline above the forest at Bethanchowk" style="object-position:60% 62%"><figcaption><span>BETHANCHOWK · 3,000 M</span><span style="opacity:.8">HIGHLINE · NEAR KATHMANDU</span></figcaption></figure>
+    </div>
+  </section>
+
+  <section class="section px" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:clamp(24px,5vw,64px);align-items:start">
+    <div class="stack gap-3">
+      <div class="kicker">Questions</div>
+      <h2 class="h2">Before you order.</h2>
+      <p class="body text-soft" style="margin:0">Other questions? Write to <span style="color:var(--color-ink)">info@yachu.co</span> and a real person replies.</p>
+    </div>
+    <div class="accordion">
+      <div class="accordion-item">
+        <button type="button" class="accordion-item__trigger" data-accordion-trigger data-accordion-group="hammock-faq" aria-controls="hm-faq-0" aria-expanded="false"><span>How long does shipping take?</span><span class="accordion-item__sign" data-accordion-sign>+</span></button>
+        <div class="accordion-item__panel" id="hm-faq-0" hidden><p class="body text-soft" style="margin:0;padding-bottom:2px">1–2 days within Nepal, 3–5 days to Japan, 5–9 days to the rest of the world.</p></div>
+      </div>
+      <div class="accordion-item">
+        <button type="button" class="accordion-item__trigger" data-accordion-trigger data-accordion-group="hammock-faq" aria-controls="hm-faq-1" aria-expanded="false"><span>How much weight can it hold?</span><span class="accordion-item__sign" data-accordion-sign>+</span></button>
+        <div class="accordion-item__panel" id="hm-faq-1" hidden><p class="body text-soft" style="margin:0;padding-bottom:2px">160 kg, as a static rating for a person lying in it. It isn't rated for jumping or swinging hard. Treat it like any suspended gear.</p></div>
+      </div>
+      <div class="accordion-item">
+        <button type="button" class="accordion-item__trigger" data-accordion-trigger data-accordion-group="hammock-faq" aria-controls="hm-faq-2" aria-expanded="false"><span>Do I need the tarp and bug net?</span><span class="accordion-item__sign" data-accordion-sign>+</span></button>
+        <div class="accordion-item__panel" id="hm-faq-2" hidden><p class="body text-soft" style="margin:0;padding-bottom:2px">For a day hike or an afternoon in the park, no. For a night out, where rain or insects are likely, yes. Together they're 20% off as the full kit.</p></div>
+      </div>
+      <div class="accordion-item">
+        <button type="button" class="accordion-item__trigger" data-accordion-trigger data-accordion-group="hammock-faq" aria-controls="hm-faq-3" aria-expanded="false"><span>Will it keep me warm?</span><span class="accordion-item__sign" data-accordion-sign>+</span></button>
+        <div class="accordion-item__panel" id="hm-faq-3" hidden><p class="body text-soft" style="margin:0;padding-bottom:2px">Not on its own. Like any hammock, cold air moves underneath you. In cool weather, add a sleeping pad or an underquilt.</p></div>
+      </div>
+      <div class="accordion-item">
+        <button type="button" class="accordion-item__trigger" data-accordion-trigger data-accordion-group="hammock-faq" aria-controls="hm-faq-4" aria-expanded="false"><span>What if it isn't right for me?</span><span class="accordion-item__sign" data-accordion-sign>+</span></button>
+        <div class="accordion-item__panel" id="hm-faq-4" hidden><p class="body text-soft" style="margin:0;padding-bottom:2px">You can exchange it within 30 days of delivery.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="hammock-reviews" class="section px" style="border-top:1px solid var(--color-hairline);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:clamp(28px,5vw,64px);align-items:start">
+    <div class="stack gap-4">
+      <div class="kicker">Reviews</div>
+      <div class="review-score"><span class="review-score__num">4.9</span><span class="stack gap-1" style="padding-bottom:4px"><span class="stars">★★★★★</span><span class="body-sm text-soft">Based on 59 reviews</span></span></div>
+      <div class="stack gap-1">
+        <div class="review-dist-row"><span>5 ★</span><span class="review-dist-bar"><span style="width:90%"></span></span><span style="text-align:right">53</span></div>
+        <div class="review-dist-row"><span>4 ★</span><span class="review-dist-bar"><span style="width:10%"></span></span><span style="text-align:right">6</span></div>
+        <div class="review-dist-row"><span>3 ★</span><span class="review-dist-bar"><span style="width:0%"></span></span><span style="text-align:right">0</span></div>
+        <div class="review-dist-row"><span>2 ★</span><span class="review-dist-bar"><span style="width:0%"></span></span><span style="text-align:right">0</span></div>
+        <div class="review-dist-row"><span>1 ★</span><span class="review-dist-bar"><span style="width:0%"></span></span><span style="text-align:right">0</span></div>
+      </div>
+      <button type="button" class="btn btn--secondary">Write a review</button>
+    </div>
+    <div class="stack" style="min-width:0">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--color-ink)">
+        <div class="chip-row" data-hammock-review-filter role="group" aria-label="Filter reviews">
+          <button type="button" class="chip is-active" data-filter="all">All</button>
+          <button type="button" class="chip" data-filter="photos">With photos</button>
+        </div>
+        <span class="body-sm text-soft">Most recent</span>
+      </div>
+      <div data-hammock-review-list>
+        <article class="review-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="stars" style="font-size:14px">★★★★★</span><span class="mono body-sm text-soft" style="letter-spacing:.08em">JACKSON, US</span></div>
+          <p class="body-lg text-pretty" style="margin:0">I was very impressed with the quality of the hammock and straps — one of the lightest on the market. My son uses this setup on our scout hikes because of the weight.</p>
+          <div style="display:flex;align-items:center;gap:10px;font-size:14px"><strong style="font-weight:600">David Myers</strong><span class="body-sm text-soft">✓ Verified buyer</span></div>
+        </article>
+        <article class="review-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="stars" style="font-size:14px">★★★★★</span><span class="mono body-sm text-soft" style="letter-spacing:.08em">KATHMANDU, NP</span></div>
+          <p class="body-lg text-pretty" style="margin:0">I take my Yachu hammock everywhere — perfect for finding stillness in every moment. Extremely portable yet strong, comfortable, and lightweight.</p>
+          <div style="display:flex;align-items:center;gap:10px;font-size:14px"><strong style="font-weight:600">Angela Shrestha</strong><span class="body-sm text-soft">✓ Verified buyer</span></div>
+        </article>
+        <article class="review-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="stars" style="font-size:14px">★★★★★</span><span class="mono body-sm text-soft" style="letter-spacing:.08em">KATHMANDU, NP</span></div>
+          <p class="body-lg text-pretty" style="margin:0">I've been using the hammock since the first model — the quality is exceptional. Customer service is even better than the products.</p>
+          <div style="display:flex;align-items:center;gap:10px;font-size:14px"><strong style="font-weight:600">Shashwat Dahal</strong><span class="body-sm text-soft">✓ Verified buyer</span></div>
+        </article>
+        <article class="review-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="stars" style="font-size:14px">★★★★★</span><span class="mono body-sm text-soft" style="letter-spacing:.08em">ALBUFEIRA, PT</span></div>
+          <p class="body-lg text-pretty" style="margin:0">Yachu hammock feels like carrying your own luxury everywhere you go. Peace, relax and chill.</p>
+          <div style="display:flex;align-items:center;gap:10px;font-size:14px"><strong style="font-weight:600">Sarita Shrestha</strong><span class="body-sm text-soft">✓ Verified buyer</span></div>
+        </article>
+      </div>
+      <p class="body text-soft" style="margin:0;padding:28px 0;border-bottom:1px solid var(--color-hairline)" data-hammock-review-empty hidden>Customer photos from the review app show here.</p>
+      <button type="button" class="btn-text" style="align-self:center;margin-top:24px">Show more reviews</button>
+    </div>
+  </section>
+</section>
+<!-- ============================== SANO PDP ============================== -->
+<section data-route="sano" aria-label="Sano Packable Daypack">
+  <nav class="breadcrumb"><a href="#/">Home</a><span>/</span><a href="#/shop">Daypacks</a><span>/</span><span class="current">Sano Packable Daypack</span></nav>
+  <div class="pdp-grid">
+    <div class="pdp-gallery" data-sano-gallery></div>
+    <div class="pdp-info">
+      <div class="kicker">Handmade in Nepal</div>
+      <h1 class="h1" style="margin-top:-6px">Sano Packable Daypack</h1>
+      <div class="mono" style="font-size:24px">$94</div>
+      <p class="body text-soft text-pretty" style="margin:0">255 g. The daypack that disappears until you need it. 'Sano' (<span class="devanagari">सानो</span>) means small in Nepali. It packs into its own front pocket and opens up to 18 L for the day.</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:4px">
+        <span class="body-sm text-soft">Color: <strong style="color:var(--color-ink)">Black</strong></span>
+        <span class="swatch is-active" style="background:#141414"></span>
+      </div>
+      <div class="addon-box">
+        <div class="addon-box__head">Pair it with</div>
+        <button type="button" class="addon-row" data-sano-addon="hammock">
+          <span class="addon-row__box" data-addon-box>&nbsp;</span>
+          <span class="addon-row__img" style="background:var(--color-sand)"><img src="images/prod-orange-sand.jpg" alt=""></span>
+          <span class="addon-row__body"><span style="font-size:15px;font-weight:500">Airlite Hammock Set</span><span style="font-size:12px;color:var(--color-soft)">225 g · straps and carabiners</span></span>
+          <span class="mono" style="font-size:14px">+$119</span>
+        </button>
+        <button type="button" class="addon-row" data-sano-addon="tarp">
+          <span class="addon-row__box" data-addon-box>&nbsp;</span>
+          <span class="addon-row__img"><img src="images/tarp-sack.png" alt=""></span>
+          <span class="addon-row__body"><span style="font-size:15px;font-weight:500">Airlite Tarp</span><span style="font-size:12px;color:var(--color-soft)">450 g · 3 × 3 m ripstop nylon</span></span>
+          <span class="mono" style="font-size:14px">+$63</span>
+        </button>
+        <button type="button" class="addon-row" data-sano-addon="net">
+          <span class="addon-row__box" data-addon-box>&nbsp;</span>
+          <span class="addon-row__img"><img src="images/net-sack.png" alt=""></span>
+          <span class="addon-row__body"><span style="font-size:15px;font-weight:500">Airlite Bug Net</span><span style="font-size:12px;color:var(--color-soft)">260 g · polyester mesh</span></span>
+          <span class="mono" style="font-size:14px">+$50</span>
+        </button>
+        <div class="addon-note" data-sano-kit-note>Add one for 10% off, or two for 20% off.</div>
+      </div>
+      <button type="button" class="btn btn--primary" data-sano-add><span data-label>Add to cart</span><span class="btn-divider"></span><span class="mono" data-sano-total>$94</span></button>
+      <div class="stack gap-1 body-sm text-soft">
+        <span><span data-free-txt>Free delivery over $90</span>: <strong style="color:var(--color-ink)" data-days-txt>5–9 days</strong></span>
+        <a href="#/help"><strong style="color:var(--color-ink);font-weight:500">30-day exchange promise</strong> <span class="link-underline">How it works</span></a>
+        <span style="font-size:13px">Apple Pay · Google Pay · PayPal · Shop Pay</span>
+      </div>
+      <div class="accordion" style="margin-top:6px">
+        <div class="accordion-item">
+          <button type="button" class="accordion-item__trigger" data-accordion-trigger data-accordion-group="sano-specs" aria-controls="sn-acc-0" aria-expanded="false"><span>Features</span><span class="accordion-item__sign" data-accordion-sign>+</span></button>
+          <div class="accordion-item__panel" id="sn-acc-0" hidden>
+            <div class="accordion-row"><span>Packs into its own front pocket</span></div>
+            <div class="accordion-row"><span>14" laptop sleeve</span></div>
+            <div class="accordion-row"><span>Two side bottle pockets</span></div>
+            <div class="accordion-row"><span>Quick-access front pocket</span></div>
+            <div class="accordion-row"><span>Anti-theft zipper loops</span></div>
+            <div class="accordion-row"><span>Sternum strap</span></div>
+            <div class="accordion-row"><span>Luggage pass-through</span></div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <button type="button" class="accordion-item__trigger" data-accordion-trigger data-accordion-group="sano-specs" aria-controls="sn-acc-1" aria-expanded="false"><span>Specs</span><span class="accordion-item__sign" data-accordion-sign>+</span></button>
+          <div class="accordion-item__panel" id="sn-acc-1" hidden>
+            <div class="accordion-row"><span>Weight</span><span class="accordion-row__val">255 g</span></div>
+            <div class="accordion-row"><span>Capacity</span><span class="accordion-row__val">18 L</span></div>
+            <div class="accordion-row"><span>Size</span><span class="accordion-row__val">40 × 28 × 10 cm</span></div>
+            <div class="accordion-row"><span>Packed</span><span class="accordion-row__val">14 × 16 × 4 cm</span></div>
+            <div class="accordion-row"><span>Fabric</span><span class="accordion-row__val">210D UHMWPE / nylon</span></div>
+            <div class="accordion-row"><span>Zipper</span><span class="accordion-row__val">YKK&reg; AquaGuard, waterproof</span></div>
+            <div class="accordion-row"><span>Made in</span><span class="accordion-row__val">Nepal</span></div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <button type="button" class="accordion-item__trigger" data-accordion-trigger data-accordion-group="sano-specs" aria-controls="sn-acc-2" aria-expanded="false"><span>Shipping &amp; exchange</span><span class="accordion-item__sign" data-accordion-sign>+</span></button>
+          <div class="accordion-item__panel" id="sn-acc-2" hidden>
+            <div class="accordion-row"><span>Within Nepal</span><span class="accordion-row__val">1–2 days</span></div>
+            <div class="accordion-row"><span>Japan</span><span class="accordion-row__val">3–5 days</span></div>
+            <div class="accordion-row"><span>Rest of the world</span><span class="accordion-row__val">5–9 days</span></div>
+            <div class="accordion-row"><span>Free delivery in Nepal. Worldwide, including Japan, free over $90 and $19 below that. Exchange within 30 days of delivery.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="section-dark section" style="padding-left:0;padding-right:0">
+    <div class="stack gap-2" style="padding:0 var(--gutter) 28px">
+      <div class="kicker" style="color:inherit;opacity:.7">Built for the day</div>
+      <h2 class="h2">Small when packed. Ready when it rains.</h2>
+    </div>
+    <div style="padding:0 var(--gutter)">
+      <div class="carousel" data-carousel style="padding:0">
+        <figure style="margin:0;flex:0 0 clamp(270px,30cqi,380px);scroll-snap-align:start;display:flex;flex-direction:column;gap:14px">
+          <div style="aspect-ratio:4/5;border-radius:6px;overflow:hidden;background:#FFFFFF"><img src="images/sano-studio.png" alt="The Sano packed into its own pocket" style="width:100%;height:100%;object-fit:contain;display:block"></div>
+          <figcaption class="stack gap-1"><strong style="font-size:17px;font-weight:600">Packs into itself</strong><span style="font-size:14px;opacity:.75;line-height:1.5">Zip it into the front pocket: 14 × 16 × 4 cm. Throw it in your luggage or hammock pouch.</span></figcaption>
+        </figure>
+        <figure style="margin:0;flex:0 0 clamp(270px,30cqi,380px);scroll-snap-align:start;display:flex;flex-direction:column;gap:14px">
+          <div style="aspect-ratio:4/5;border-radius:6px;overflow:hidden;background:#2A2A2A"><img src="images/sano-strap.png" alt="The waterproof grid fabric" style="width:100%;height:100%;object-fit:cover;display:block"></div>
+          <figcaption class="stack gap-1"><strong style="font-size:17px;font-weight:600">Weatherproof</strong><span style="font-size:14px;opacity:.75;line-height:1.5">210D UHMWPE / nylon grid with a waterproof YKK&reg; AquaGuard zipper.</span></figcaption>
+        </figure>
+        <figure style="margin:0;flex:0 0 clamp(270px,30cqi,380px);scroll-snap-align:start;display:flex;flex-direction:column;gap:14px">
+          <div style="aspect-ratio:4/5;border-radius:6px;overflow:hidden;background:#2A2A2A"><img src="images/sano-laptop.png" alt="The 14-inch laptop sleeve" style="width:100%;height:100%;object-fit:cover;display:block"></div>
+          <figcaption class="stack gap-1"><strong style="font-size:17px;font-weight:600">Laptop sleeve</strong><span style="font-size:14px;opacity:.75;line-height:1.5">Fits a 14&quot; laptop, so it works for the office as well as the trail.</span></figcaption>
+        </figure>
+        <figure style="margin:0;flex:0 0 clamp(270px,30cqi,380px);scroll-snap-align:start;display:flex;flex-direction:column;gap:14px">
+          <div style="aspect-ratio:4/5;border-radius:6px;overflow:hidden;background:#2A2A2A"><img src="images/sano-held.png" alt="The Sano held by its handle" style="width:100%;height:100%;object-fit:cover;display:block"></div>
+          <figcaption class="stack gap-1"><strong style="font-size:17px;font-weight:600">18 L for the day</strong><span style="font-size:14px;opacity:.75;line-height:1.5">Two side bottle pockets and a quick-access front pocket.</span></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section px" style="border-top:1px solid var(--color-hairline);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:clamp(28px,5vw,64px);align-items:start">
+    <div class="stack gap-4">
+      <div class="kicker">Reviews</div>
+      <div class="review-score"><span class="review-score__num">0.0</span><span class="stack gap-1" style="padding-bottom:4px"><span class="stars" style="color:var(--color-hairline)">★★★★★</span><span class="body-sm text-soft">No reviews yet</span></span></div>
+      <div class="stack gap-1">
+        <div class="review-dist-row"><span>5 ★</span><span class="review-dist-bar"><span style="width:0%"></span></span><span style="text-align:right">0</span></div>
+        <div class="review-dist-row"><span>4 ★</span><span class="review-dist-bar"><span style="width:0%"></span></span><span style="text-align:right">0</span></div>
+        <div class="review-dist-row"><span>3 ★</span><span class="review-dist-bar"><span style="width:0%"></span></span><span style="text-align:right">0</span></div>
+        <div class="review-dist-row"><span>2 ★</span><span class="review-dist-bar"><span style="width:0%"></span></span><span style="text-align:right">0</span></div>
+        <div class="review-dist-row"><span>1 ★</span><span class="review-dist-bar"><span style="width:0%"></span></span><span style="text-align:right">0</span></div>
+      </div>
+      <button type="button" class="btn btn--secondary">Write a review</button>
+    </div>
+    <div class="stack" style="min-width:0">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--color-ink)">
+        <div class="chip-row" role="group" aria-label="Filter reviews">
+          <button type="button" class="chip is-active">All</button>
+          <button type="button" class="chip">With photos</button>
+        </div>
+        <span class="body-sm text-soft">Most recent</span>
+      </div>
+      <div class="stack gap-1" style="padding:32px 0;border-bottom:1px solid var(--color-hairline)">
+        <strong style="font-size:17px;font-weight:600">Be the first to review the Sano</strong>
+        <span class="body text-soft">Reviews show here once buyers post them.</span>
+      </div>
+    </div>
+  </section>
+</section>
+<!-- ============================== GENERIC PRODUCT PDP (tarp/net/straps/carabiners) ============================== -->
+<section data-route="product" aria-label="Product" data-product-root></section>
+
+<!-- ============================== CART ============================== -->
+<section data-route="cart" aria-label="Your cart">
+  <div class="section px" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:clamp(28px,5vw,64px);align-items:start">
+    <div class="stack gap-4">
+      <h1 class="h1 h1--display">Your cart</h1>
+      <div data-cart-page-empty hidden class="stack gap-3" style="align-items:flex-start;padding:12px 0">
+        <span class="body text-soft">Nothing here yet.</span>
+        <a href="#/shop" class="btn btn--primary">Shop all gear</a>
+      </div>
+      <div style="border-top:1px solid var(--color-ink)" data-cart-page-items></div>
+      <div class="stack gap-3" style="padding:16px;border:1px solid var(--color-hairline);border-radius:var(--radius)" data-cart-page-bundle hidden>
+        <span style="font-size:14px"><strong style="font-weight:600" data-cart-bundle-head></strong> <span class="text-soft" data-cart-bundle-hint></span></span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap" data-cart-bundle-adds></div>
+      </div>
+    </div>
+    <div class="cart-summary-box" data-cart-page-summary hidden>
+      <div class="mono body-sm text-soft" style="letter-spacing:.1em">SUMMARY</div>
+      <div style="display:flex;justify-content:space-between;font-size:15px"><span>Subtotal · <span data-cart-count>0</span> items</span><span class="mono" data-cart-sub>$0</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:15px" class="text-accent" data-cart-disc-row hidden><span data-cart-disc-label>2 items, 10% off</span><span class="mono" data-cart-disc>−$0</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:15px" class="text-soft"><span>Shipping</span><span data-cart-ship>Free</span></div>
+      <div style="font-size:14px" class="text-accent" data-cart-ship-gap hidden></div>
+      <div style="display:flex;justify-content:space-between;font-size:19px;font-weight:600;border-top:1px solid var(--color-hairline);padding-top:14px"><span>Total</span><span class="mono" style="font-weight:500" data-cart-total>$0</span></div>
+      <button type="button" class="btn btn--primary btn--block" style="margin-top:6px" data-checkout>Checkout</button>
+      <p class="checkout-note" data-checkout-note hidden>This is a preview site — checkout isn't connected. Contact <a href="mailto:info@yachu.co" style="color:inherit;text-decoration:underline">info@yachu.co</a> to order.</p>
+      <span style="text-align:center;font-size:12px" class="text-soft">Apple Pay · Google Pay · PayPal · Shop Pay</span>
+      <div class="stack gap-1 text-soft" style="border-top:1px solid var(--color-hairline);padding-top:14px;font-size:13px">
+        <span><span data-free-txt>Free delivery over $90</span>: <strong style="color:var(--color-ink)" data-days-txt>5–9 days</strong></span>
+        <span><strong style="color:var(--color-ink);font-weight:500">30-day exchange promise.</strong> Unused and in its pouch.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== STORY ============================== -->
+<section data-route="story" aria-label="Our story">
+  <div class="hero-media">
+    <img src="images/founder-road.jpg" alt="Bishal Shrestha, Yachu's founder, riding a mountain bike through Manang, above 3,500 m, with a snow peak ahead">
+    <div class="hero-media__content">
+      <div class="kicker" style="color:inherit;opacity:.85">Our story</div>
+      <h1 class="h1--display" style="margin:0;max-width:14ch">Made in Nepal, built for the world</h1>
+      <div class="hero-media__meta"><span>MANANG · 3,500 M</span><span>ANNAPURNA REGION · 2019</span></div>
+    </div>
+  </div>
+
+  <section class="section px" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:clamp(20px,4vw,56px)">
+    <div class="kicker">Why Yachu</div>
+    <div class="stack gap-4" style="grid-column:span 2;min-width:0;max-width:640px">
+      <h2 class="h2 text-balance">Out there, you feel the weight of everything you carry.</h2>
+      <div class="stack gap-3" style="font-size:17px;line-height:1.6">
+        <p style="margin:0">That's me in Manang in 2019, above 3,500 m. On that ride, like on most of my trips, my gear weighed more than it needed to, and my back felt every gram.</p>
+        <p style="margin:0">While many leave to chase a dream abroad, I stayed to chase the Nepali dream.</p>
+        <p style="margin:0">In 2023 I started Yachu to make outdoor gear that's light, simple and made well.</p>
+        <p style="margin:0">Yachu (<span lang="ne" class="devanagari">याचु</span>) is my grandmother's name. In Newari, it means clear and pure.</p>
+        <p style="margin:0">Our mission: help people get out there more, slow down, worry less and leave no trace.</p>
+        <p style="margin:0">Our vision: make quality outdoor gear in Nepal, earn people's trust, and take it to the world.</p>
+        <p style="margin:0">We're just getting started, and we're grateful for supporters all over the world. Still learning, still building, one piece at a time.</p>
+      </div>
+      <div class="stack gap-1" style="border-top:1px solid var(--color-hairline);padding-top:18px">
+        <strong style="font-size:17px;font-weight:600">Bishal Shrestha</strong>
+        <span class="body-sm text-soft">Founder, Yachu</span>
+        <span class="body-sm text-soft" style="margin-top:6px">My notes: <a href="https://bishal.sh" target="_blank" rel="noopener" style="color:var(--color-ink);text-decoration:underline">bishal.sh</a></span>
+      </div>
+      <p class="body text-soft" style="margin:0">Questions, trip stories, or just want to say hello? Write to me at <span style="color:var(--color-ink)">bishal@yachu.co</span> or find us on Instagram <a href="https://www.instagram.com/yachu.co/" style="color:var(--color-ink);text-decoration:underline">@yachu.co</a>.</p>
+    </div>
+  </section>
+
+  <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));background:var(--color-bg-2)">
+    <div style="position:relative;min-height:clamp(300px,40vw,540px)">
+      <img src="images/team-trail.jpg" alt="The Yachu team walking up a valley in the Makalu Barun region with packs and trekking poles, 2024" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:45% 70%">
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:30px 16px 12px;display:flex;justify-content:space-between" class="mono body-sm" style="color:#FAFAF7;background:linear-gradient(transparent,rgba(0,0,0,.45))"><span>MAKALU BARUN REGION</span><span>2024</span></div>
+    </div>
+    <div class="stack gap-3" style="padding:clamp(44px,7vw,96px) var(--gutter);justify-content:center">
+      <div class="kicker">The team</div>
+      <h2 class="h2">A small team from Nepal.</h2>
+      <p class="body-lg" style="margin:0">We're inspired by the mountains, lakes and rivers that shape this country.</p>
+      <p class="body text-soft" style="margin:0">Every product is designed in Lalitpur, made by our own team in Nepal, and tested on the trails we grew up exploring.</p>
+    </div>
+  </section>
+
+  <section class="center-cta">
+    <img src="images/logo-icon-paper.png" alt="" style="width:41px;height:44px;filter:invert(1)">
+    <h2 class="h1--display" style="margin:0">From Himalayas to the world</h2>
+    <a href="#/shop" class="btn btn--secondary">Explore our gear</a>
+  </section>
+</section>
+<!-- ============================== HELP ============================== -->
+<section data-route="help" aria-label="Help">
+  <div class="section px stack gap-3" style="padding-bottom:24px">
+    <h1 class="h1 h1--display">Help</h1>
+    <p class="body-lg text-soft" style="max-width:48ch">Short answers. If yours isn't here, write to <span style="color:var(--color-ink)">info@yachu.co</span> and a real person replies.</p>
+    <div class="chip-row" data-help-tabs role="tablist" aria-label="Help topics" style="margin-top:14px">
+      <button type="button" class="chip is-active" data-tab="shipping" role="tab" aria-selected="true">Shipping</button>
+      <button type="button" class="chip" data-tab="exchanges" role="tab" aria-selected="false">Exchanges</button>
+      <button type="button" class="chip" data-tab="care" role="tab" aria-selected="false">Care and safety</button>
+      <button type="button" class="chip" data-tab="contact" role="tab" aria-selected="false">Contact</button>
+    </div>
+  </div>
+
+  <div class="section px" style="padding-top:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:clamp(16px,4vw,56px);align-items:start">
+    <h2 class="h2" style="font-size:clamp(28px,3.4vw,40px)" data-help-title>Shipping</h2>
+    <div class="stack gap-3" style="grid-column:span 2;min-width:0">
+      <div class="tab-panel" data-tab-panel="shipping">
+        <p class="body-lg" style="margin:0">Free delivery in Nepal. Worldwide, including Japan, free over $90 and $19 below that. Orders ship from our head office in Lalitpur, or from our partner warehouses in Japan, Australia, Canada and Switzerland.</p>
+        <div style="border-top:1px solid var(--color-ink);margin-top:16px">
+          <div class="accordion-row"><span>Nepal</span><span class="accordion-row__val">1–2 days</span></div>
+          <div class="accordion-row"><span>Japan</span><span class="accordion-row__val">3–5 days</span></div>
+          <div class="accordion-row"><span>Rest of the world</span><span class="accordion-row__val">5–9 days</span></div>
+        </div>
+        <p class="body-sm text-soft" style="margin-top:16px">You'll get a tracking link by email when your order ships.</p>
+      </div>
+      <div class="tab-panel" data-tab-panel="exchanges" hidden>
+        <p class="body-lg" style="margin:0">You can exchange within 30 days of delivery, as long as the gear is unused and in its pouch.</p>
+        <div style="border-top:1px solid var(--color-ink);margin-top:16px">
+          <div class="accordion-row"><span class="stack" style="gap:4px"><strong style="font-weight:600">Damaged or defective</strong><span class="text-soft">We cover shipping both ways. You choose a replacement or a full refund.</span></span></div>
+          <div class="accordion-row"><span class="stack" style="gap:4px"><strong style="font-weight:600">Change of mind</strong><span class="text-soft">You cover the return shipping. We send your new item free.</span></span></div>
+          <div class="accordion-row"><span class="stack" style="gap:4px"><strong style="font-weight:600">How to start</strong><span class="text-soft">Write to info@yachu.co with your order number, and a photo if something's wrong. We'll reply with the return address.</span></span></div>
+        </div>
+      </div>
+      <div class="tab-panel" data-tab-panel="care" hidden>
+        <div style="border-top:1px solid var(--color-ink)">
+          <div class="accordion-row"><span>Hang it high enough that it doesn't touch the ground when you lie in it. Dragging on the ground can tear the fabric.</span></div>
+          <div class="accordion-row"><span>Keep it away from fire and sharp objects.</span></div>
+          <div class="accordion-row"><span>Take your shoes off before getting in.</span></div>
+          <div class="accordion-row"><span>Avoid long exposure to sun and rain.</span></div>
+          <div class="accordion-row"><span>If it's wet, dry it fully before you pack it away.</span></div>
+          <div class="accordion-row"><span>If you see any damage or defect, stop using it.</span></div>
+          <div class="accordion-row"><span>Max load 160 kg. Not for swinging or jumping.</span></div>
+          <div class="accordion-row"><span>Leave no trace: protect the trees, pack out what you bring.</span></div>
+        </div>
+        <div class="stack gap-1" style="margin-top:16px;padding:16px;background:var(--color-bg-2);border-radius:var(--radius)">
+          <span class="mono body-sm text-accent" style="letter-spacing:.1em">CAUTION</span>
+          <p class="body" style="margin:0">Hang it at a height that's safe if you fall. You use Yachu gear at your own risk.</p>
+        </div>
+      </div>
+      <div class="tab-panel" data-tab-panel="contact" hidden>
+        <div style="border-top:1px solid var(--color-ink)">
+          <div class="accordion-row"><span>Email</span><span class="accordion-row__val">info@yachu.co</span></div>
+          <div class="accordion-row"><span>Instagram</span><span class="accordion-row__val">@yachu.co</span></div>
+          <div class="accordion-row"><span>Head office</span><span class="accordion-row__val" style="white-space:pre-line">Jawalakhel-13, Lalitpur, Nepal
+By appointment: +977 981-8786534</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== WHOLESALE ============================== -->
+<section data-route="wholesale" aria-label="Wholesale">
+  <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))">
+    <div style="position:relative;min-height:clamp(340px,48vw,640px);background:var(--color-sand)"><img src="images/kit-orange.jpg" alt="The Airlite Hammock Set laid out: hammock, straps, carabiners and pouch" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></div>
+    <div class="stack gap-3" style="padding:clamp(44px,7vw,96px) var(--gutter);justify-content:center">
+      <div class="kicker">Wholesale</div>
+      <h1 class="h1 text-balance">Run an outdoor shop?</h1>
+      <p class="body-lg" style="margin:0">We'd love to see Yachu on your shelves. There's no minimum order.</p>
+      <p class="body text-soft" style="margin:0">Write to <span style="color:var(--color-ink)">business@yachu.co</span> with your shop name, location and website, and we'll send our wholesale details.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;padding-top:6px">
+        <a href="mailto:business@yachu.co?subject=Wholesale" class="btn btn--primary">Email business@yachu.co</a>
+        <a href="#/where-to-buy" class="btn btn--secondary">See current stockists</a>
+      </div>
+    </div>
+  </section>
+</section>
+
+<!-- ============================== WHERE TO BUY ============================== -->
+<section data-route="where-to-buy" aria-label="Where to buy">
+  <div class="section px stack gap-3" style="padding-bottom:clamp(32px,4vw,48px)">
+    <div class="kicker">Where to buy</div>
+    <h1 class="h1--display" style="margin:0">Find Yachu near you</h1>
+    <p class="body-lg text-soft" style="margin:0">See and try Yachu gear in person at our retailers.</p>
+  </div>
+  <section class="px" style="padding-bottom:clamp(56px,8vw,112px);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:clamp(40px,5vw,64px)">
+    <div class="stack gap-3" style="min-width:0">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1.5px solid var(--color-ink);padding-bottom:10px"><h2 style="margin:0;font-size:28px;letter-spacing:-.025em;font-weight:600">Nepal</h2><span class="mono body-sm text-soft">7</span></div>
+      <div class="stockist-head">
+        <span class="mono body-sm text-soft" style="letter-spacing:.1em">YACHU HEAD OFFICE</span>
+        <span style="font-size:17px;font-weight:500">Jawalakhel-13, Lalitpur, Nepal</span>
+        <span class="body-sm text-soft">+977 981-8786534 · Visits by appointment only</span>
+      </div>
+      <div class="stockist-list">
+        <a href="https://maps.app.goo.gl/cQFCyrGzgFVmwq9q6" target="_blank" rel="noopener"><span class="stack" style="gap:2px"><span style="font-size:17px;font-weight:500">Melting Pot</span></span><span class="mono body-sm" style="letter-spacing:.06em">MAP ↗</span></a>
+        <a href="https://maps.app.goo.gl/1NXyCTCjm6sjgpAKA" target="_blank" rel="noopener"><span class="stack" style="gap:2px"><span style="font-size:17px;font-weight:500">Japhoo</span><span class="area">Chaksibari Marg, Thamel</span></span><span class="mono body-sm" style="letter-spacing:.06em">MAP ↗</span></a>
+        <a href="https://maps.app.goo.gl/M3Mh7P7EWJgKMSAT7" target="_blank" rel="noopener"><span class="stack" style="gap:2px"><span style="font-size:17px;font-weight:500">Japhoo</span><span class="area">Tridevi Marg, Thamel</span></span><span class="mono body-sm" style="letter-spacing:.06em">MAP ↗</span></a>
+        <a href="https://maps.app.goo.gl/DjcnDfY5zScGCyEQ6" target="_blank" rel="noopener"><span class="stack" style="gap:2px"><span style="font-size:17px;font-weight:500">Japhoo</span><span class="area">Thamel Marg</span></span><span class="mono body-sm" style="letter-spacing:.06em">MAP ↗</span></a>
+        <a href="https://maps.app.goo.gl/FnX2QLNv7TkuVTGm9" target="_blank" rel="noopener"><span class="stack" style="gap:2px"><span style="font-size:17px;font-weight:500">Japhoo</span><span class="area">JP Road, Thamel</span></span><span class="mono body-sm" style="letter-spacing:.06em">MAP ↗</span></a>
+        <a href="https://maps.app.goo.gl/hLZdcYACCcRty9DY9" target="_blank" rel="noopener"><span class="stack" style="gap:2px"><span style="font-size:17px;font-weight:500">Cafe Soma Store</span></span><span class="mono body-sm" style="letter-spacing:.06em">MAP ↗</span></a>
+      </div>
+    </div>
+    <div class="stack gap-3" style="min-width:0">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1.5px solid var(--color-ink);padding-bottom:10px"><h2 style="margin:0;font-size:28px;letter-spacing:-.025em;font-weight:600">Japan</h2><span class="mono body-sm text-soft">4</span></div>
+      <div class="stockist-list">
+        <a href="https://share.google/j6cnzS4ZHsKKq1WTD" target="_blank" rel="noopener"><span style="font-size:17px;font-weight:500">Purveyors</span><span class="mono body-sm" style="letter-spacing:.06em">MAP ↗</span></a>
+        <a href="https://maps.app.goo.gl/guN4NmkVSakLwsrp9" target="_blank" rel="noopener"><span style="font-size:17px;font-weight:500">Hiho Outdoor Living</span><span class="mono body-sm" style="letter-spacing:.06em">MAP ↗</span></a>
+        <a href="https://maps.app.goo.gl/kTr4YcdReyhVjKNd7" target="_blank" rel="noopener"><span style="font-size:17px;font-weight:500">Hachioji Tozan Yohinten</span><span class="mono body-sm" style="letter-spacing:.06em">MAP ↗</span></a>
+        <a href="https://maps.app.goo.gl/D5eg4JdtYDb6FEaJA" target="_blank" rel="noopener"><span style="font-size:17px;font-weight:500">Curiace Trading</span><span class="mono body-sm" style="letter-spacing:.06em">MAP ↗</span></a>
+      </div>
+    </div>
+  </section>
+  <section style="background:var(--color-bg-2);padding:clamp(48px,7vw,88px) 20px" class="center-cta">
+    <h2 class="h2">Or order online</h2>
+    <p class="body text-soft" style="margin:0">Free delivery in Nepal. Worldwide, free over $90.</p>
+    <a href="#/shop" class="btn btn--primary">Shop all gear</a>
+  </section>
+</section>
+
+<!-- ============================== CREATORS ============================== -->
+<section data-route="creators" aria-label="Creators">
+  <div class="hero-media">
+    <img src="images/highline-graded.jpg" alt="A Yachu hammock hung high between rocks in the mountains">
+    <div class="hero-media__content" style="max-width:760px">
+      <div class="kicker" style="color:inherit;opacity:.85">Creators</div>
+      <h1 class="h1--display text-balance" style="margin:0">Make photos or films outdoors?</h1>
+      <p class="body-lg" style="margin:0">We work with creators who take their gear on real trips.</p>
+    </div>
+  </div>
+  <section class="section px stack gap-4" style="max-width:640px">
+    <p style="margin:0;font-size:clamp(20px,2.4vw,26px);line-height:1.4;letter-spacing:-.01em">Send your channel or portfolio to <span style="text-decoration:underline;text-underline-offset:4px">business@yachu.co</span> and tell us where you're headed next.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:10px">
+      <a href="mailto:business@yachu.co?subject=Creators" class="btn btn--primary">Email business@yachu.co</a>
+      <a href="https://www.instagram.com/yachu.co/" class="btn btn--secondary">@yachu.co</a>
+    </div>
+  </section>
+</section>
+<!-- ============================== JOURNAL ============================== -->
+<section data-route="journal" aria-label="Journal">
+  <div data-journal-view="index">
+    <div class="section px stack" style="gap:clamp(36px,5vw,64px)">
+      <div class="stack gap-3" style="max-width:640px">
+        <div class="kicker">Journal</div>
+        <h1 class="h1--display" style="margin:0">Notes from the trail</h1>
+        <p class="body-lg text-soft" style="margin:0">Trips, setup guides and gear care, from Nepal.</p>
+      </div>
+      <div class="journal-grid">
+        <a href="#/journal/hang-hammock" class="journal-card">
+          <div class="journal-card__media"><img src="images/mountain-orange.jpg" alt="The orange Airlite Hammock hung at Api Base Camp" style="object-position:70% 50%"></div>
+          <div class="kicker" style="padding-top:4px">Guide</div>
+          <h2 style="margin:0;font-size:22px;line-height:1.15;letter-spacing:-.02em;font-weight:600" class="text-balance">How to hang your hammock in 60 seconds</h2>
+          <p class="body text-soft" style="margin:0">Three steps, no knots.</p>
+        </a>
+        <div class="journal-card">
+          <div class="journal-card__placeholder">POST PHOTO</div>
+          <div class="kicker" style="padding-top:4px">Care</div>
+          <h2 style="margin:0;font-size:22px;line-height:1.15;letter-spacing:-.02em;font-weight:600">Caring for your hammock</h2>
+          <p class="body text-soft" style="margin:0">Example post. Replace with your own.</p>
+        </div>
+        <div class="journal-card">
+          <div class="journal-card__placeholder">POST PHOTO</div>
+          <div class="kicker" style="padding-top:4px">Trip</div>
+          <h2 style="margin:0;font-size:22px;line-height:1.15;letter-spacing:-.02em;font-weight:600">Your first trip story</h2>
+          <p class="body text-soft" style="margin:0">Example post. Replace with your own.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <article data-journal-view="hang-hammock" hidden>
+    <div class="section px stack" style="align-items:center;gap:clamp(28px,4vw,48px)">
+      <div style="width:100%;max-width:680px" class="stack gap-3">
+        <a href="#/journal" style="font-size:14px;font-weight:500" class="text-soft">‹ Journal</a>
+        <div class="kicker">Guide · 2 min read</div>
+        <h1 class="h1--display text-balance" style="margin:0">How to hang your hammock in 60 seconds</h1>
+      </div>
+      <figure style="margin:0;width:100%;max-width:1040px" class="stack gap-2">
+        <div style="aspect-ratio:16/10;border-radius:4px;overflow:hidden;background:var(--color-sand)"><img src="images/mountain-orange.jpg" alt="The orange Airlite Hammock hung at Api Base Camp, Nepal, 4,200 m" style="width:100%;height:100%;object-fit:cover;object-position:70% 50%;display:block"></div>
+        <figcaption class="mono body-sm text-soft" style="letter-spacing:.08em">API BASE CAMP · 4,200 M</figcaption>
+      </figure>
+      <div class="article-body">
+        <p style="margin:0;font-size:19px;line-height:1.55">The Airlite Hammock Set goes up without a single knot. Here's how to do it in about a minute.</p>
+        <h2 style="margin:16px 0 0;font-size:24px;letter-spacing:-.02em;font-weight:600">What you need</h2>
+        <p style="margin:0">Everything comes in the pouch: the hammock, two tree straps and two carabiners. All you have to find is two strong supports or trees.</p>
+        <h2 style="margin:16px 0 0;font-size:24px;letter-spacing:-.02em;font-weight:600">Three steps</h2>
+        <ol class="article-steps">
+          <li><span>01</span><span><strong style="font-weight:600">Wrap the straps.</strong> One around each strong support or tree.</span></li>
+          <li><span>02</span><span><strong style="font-weight:600">Clip in.</strong> The carabiners come attached to the hammock. Clip each one to a strap.</span></li>
+          <li><span>03</span><span><strong style="font-weight:600">Adjust and lie back.</strong> Pull the whoopie slings to set a 30° sag. Lie slightly diagonal to sleep flat.</span></li>
+        </ol>
+        <figure style="margin:12px 0;aspect-ratio:4/3;border-radius:4px;overflow:hidden;background:var(--color-sand)"><img src="images/carabiner-inuse.png" alt="The carabiner clipped to the whoopie sling" style="width:100%;height:100%;object-fit:cover;display:block"></figure>
+        <h2 style="margin:16px 0 0;font-size:24px;letter-spacing:-.02em;font-weight:600">Before you get in</h2>
+        <p style="margin:0">Hang it at a height that's safe if you fall, high enough that it won't touch the ground when you lie in it. Max load is 160 kg. Not for swinging or jumping.</p>
+      </div>
+      <div style="width:100%;max-width:680px;border-top:1px solid var(--color-hairline);padding-top:28px" class="stack gap-3">
+        <div class="kicker">Gear in this post</div>
+        <a href="#/hammock" style="display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--color-hairline);border-radius:var(--radius)">
+          <span style="width:64px;height:64px;flex:0 0 64px;border-radius:4px;overflow:hidden;background:var(--color-sand)"><img src="images/prod-orange-sand.jpg" alt="The Airlite Hammock Set" style="width:100%;height:100%;object-fit:cover;display:block"></span>
+          <span class="stack" style="gap:2px;flex:1;min-width:0"><strong style="font-size:16px;font-weight:600">Airlite Hammock Set</strong><span class="body-sm text-soft">Hammock, straps, carabiners · 225 g</span></span>
+          <span class="mono" style="font-size:15px">$119</span>
+        </a>
+      </div>
+    </div>
+  </article>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer__grid">
+    <div class="site-footer__newsletter">
+      <div class="site-footer__newsletter-title">New gear and restocks, by email</div>
+      <form class="newsletter-form" data-newsletter-form>
+        <label class="visually-hidden" for="newsletter-email">Email address</label>
+        <input id="newsletter-email" type="email" placeholder="Email address" required autocomplete="email">
+        <button type="submit">Sign up</button>
+      </form>
+      <p class="newsletter-note" data-newsletter-note hidden>Thanks — you're on the list. (Preview site: not connected to a mailing list yet.)</p>
+      <div class="site-footer__social">
+        <a href="https://www.instagram.com/yachu.co/" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://www.youtube.com/@YachuGears" target="_blank" rel="noopener">YouTube</a>
+        <a href="https://www.tiktok.com/@yachu.co" target="_blank" rel="noopener">TikTok</a>
+      </div>
+    </div>
+    <div class="site-footer__col">
+      <div class="site-footer__col-title">SHOP</div>
+      <a href="#/hammock">Hammock Set</a>
+      <a href="#/sano">Sano Packable Daypack</a>
+      <a href="#/product/tarp">Tarp</a>
+      <a href="#/product/net">Bug Net</a>
+      <a href="#/shop">All gear</a>
+    </div>
+    <div class="site-footer__col">
+      <div class="site-footer__col-title">YACHU</div>
+      <a href="#/story">Our story</a>
+      <a href="#/where-to-buy">Where to buy</a>
+      <a href="#/wholesale">Wholesale</a>
+      <a href="#/creators">Creators</a>
+    </div>
+    <div class="site-footer__col">
+      <div class="site-footer__col-title">HELP</div>
+      <a href="#/help">Shipping</a>
+      <a href="#/help">Exchanges</a>
+      <a href="#/help?tab=care">Care and safety</a>
+      <a href="#/help">Contact</a>
+    </div>
+  </div>
+  <div class="site-footer__bottom">
+    <span>© 2026 Yachu · Lalitpur, Nepal · USD $</span>
+    <span style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <span>Privacy · Terms · Refunds</span>
+      <label style="display:flex;align-items:center;gap:6px;opacity:.7">
+        <span class="mono" style="font-size:11px;letter-spacing:.06em">PREVIEW MARKET</span>
+        <select data-market-select style="background:transparent;color:inherit;border:1px solid rgba(250,250,247,.4);border-radius:3px;padding:3px 6px;font-size:12px">
+          <option value="US">United States</option>
+          <option value="NP">Nepal</option>
+          <option value="JP">Japan</option>
+          <option value="INTL">Rest of world</option>
+        </select>
+      </label>
+    </span>
+  </div>
+</footer>
+
+<div class="pdp-buybar" data-pdp-buybar>
+  <span class="pdp-buybar__img"><img data-pdp-buybar-img src="images/prod-orange-sand.jpg" alt=""></span>
+  <span class="stack" style="flex:1;min-width:0">
+    <span style="font-size:14px;font-weight:600" data-pdp-buybar-name>Hammock Set</span>
+    <span class="body-sm text-soft" data-pdp-buybar-meta>Orange · 225 g</span>
+  </span>
+  <button type="button" class="btn btn--primary btn--sm" data-pdp-buybar-add><span>Add</span><span class="mono" data-pdp-buybar-total>$119</span></button>
+</div>
+
+<script>
+(function () {
+'use strict';
+
+/* ============================================================
+   Data module — adapted from yachu-data.js (product catalog,
+   localStorage cart, bundle discount, market/shipping simulator).
+   Image paths point at ./images/, hrefs point at hash routes.
+   ============================================================ */
+var P = {
+  hammock: { id: 'hammock', name: 'Airlite Hammock Set', short: 'Hammock Set', price: 119, cat: 'hammock', w: 225, meta: 'Hammock, straps, carabiners · 225 g', href: '#/hammock', img: 'images/prod-orange-sand.jpg', bg: '#D6CCBB', variants: ['Orange', 'Blue', 'Green'], vimg: { Orange: 'images/prod-orange-sand.jpg', Blue: 'images/prod-blue-sand.jpg', Green: 'images/prod-green-sand.jpg' } },
+  sano: { id: 'sano', name: 'Sano Packable Daypack', short: 'Sano Packable Daypack', price: 94, cat: 'pack', w: 255, meta: 'Black · 18 L, packs into itself · 255 g', href: '#/sano', img: 'images/sano-studio.png', bg: '#FFFFFF', isNew: true, variants: ['Black'] },
+  tarp: { id: 'tarp', name: 'Airlite Tarp', short: 'Tarp', price: 63, cat: 'shelter', w: 450, meta: '3 × 3 m, packs to 10 × 18 cm · 450 g', href: '#/product/tarp', img: 'images/tarp-forest.png', thumb: 'images/tarp-sack.png', bg: '#D6CCBB', variants: ['Green'] },
+  net: { id: 'net', name: 'Airlite Bug Net', short: 'Bug Net', price: 50, cat: 'shelter', w: 260, meta: '2.8 × 1.3 m, packs to 14 × 9 cm · 260 g', href: '#/product/net', img: 'images/net-studio.png', thumb: 'images/net-sack.png', bg: '#FFFFFF', variants: ['Black'] },
+  straps: { id: 'straps', name: 'Airlite Tree Straps', short: 'Tree Straps', price: null, cat: 'accessory', w: 65, meta: 'Spare pair, 3 m each · 65 g', href: '#/product/straps', img: 'images/strap-tree.png', thumb: 'images/strap-coil.png', bg: '#D6CCBB', variants: ['Grey'] },
+  carabiners: { id: 'carabiners', name: '5 kN Carabiners', short: 'Carabiners', price: null, cat: 'accessory', w: 12, meta: 'Spare pair · 12 g', href: '#/product/carabiners', img: 'images/carabiner-inuse.png', thumb: 'images/carabiner-rope.png', bg: '#D6CCBB', variants: ['Black'] }
+};
+var MK = { US: { lead: 'delivery to the US', days: [5, 9], free: false }, NP: { lead: 'delivery in Nepal', days: [1, 2], free: true }, JP: { lead: 'delivery to Japan', days: [3, 5], free: false }, INTL: { lead: 'worldwide delivery', days: [5, 9], free: false } };
+
+function detectMarket() {
+  try {
+    var loc = (navigator.language || 'en-US');
+    if (/-NP$/i.test(loc) || /^ne\b/i.test(loc)) return 'NP';
+    if (/-JP$/i.test(loc) || /^ja\b/i.test(loc)) return 'JP';
+    if (/-US$/i.test(loc) || /^en-US/i.test(loc)) return 'US';
+    return 'INTL';
+  } catch (e) { return 'US'; }
+}
+var market = {
+  get: function () {
+    try {
+      var m = localStorage.getItem('yachu-market');
+      if (MK[m]) return m;
+      var d = detectMarket();
+      localStorage.setItem('yachu-market', d);
+      return d;
+    } catch (e) { return 'US'; }
+  },
+  set: function (m) { if (!MK[m]) return; try { localStorage.setItem('yachu-market', m); } catch (e) {} }
+};
+
+var KEY = 'yachu-cart';
+function readCart() { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { return []; } }
+function writeCart(c, open) { try { localStorage.setItem(KEY, JSON.stringify(c)); } catch (e) {} window.dispatchEvent(new CustomEvent('yachu-cart', { detail: { open: !!open } })); }
+function money(n) { return '$' + (Math.round(n * 100) % 100 === 0 ? String(Math.round(n)) : n.toFixed(2)); }
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+var cart = {
+  items: function () {
+    return readCart().filter(function (i) { return P[i.id]; }).map(function (i) {
+      var p = P[i.id];
+      return { key: i.key, id: i.id, variant: i.variant, qty: i.qty, name: p.name, price: p.price, line: p.price * i.qty, img: (p.vimg && p.vimg[i.variant]) || p.thumb || p.img, bg: p.bg, href: p.href };
+    });
+  },
+  add: function (id, variant, qty, open) {
+    var c = readCart(), v = variant || P[id].variants[0], k = id + ':' + v, f = c.find(function (i) { return i.key === k; });
+    if (f) f.qty += qty || 1; else c.push({ key: k, id: id, variant: v, qty: qty || 1 });
+    writeCart(c, open !== false);
+  },
+  setQty: function (key, q) { var c = readCart().map(function (i) { return i.key === key ? Object.assign({}, i, { qty: q }) : i; }).filter(function (i) { return i.qty > 0; }); writeCart(c, false); },
+  count: function () { return readCart().reduce(function (s, i) { return s + i.qty; }, 0); },
+  totals: function () {
+    var it = cart.items(), sub = it.reduce(function (s, i) { return s + i.line; }, 0);
+    var has = function (id) { return it.some(function (i) { return i.id === id; }); };
+    var EL = ['hammock', 'sano', 'tarp', 'net'];
+    var elig = it.filter(function (i) { return EL.indexOf(i.id) > -1; });
+    var n3 = EL.filter(has).length;
+    var rate = n3 >= 3 ? 0.2 : n3 === 2 ? 0.1 : 0;
+    var trio = rate > 0;
+    var disc = elig.reduce(function (s, i) { return s + i.line; }, 0) * rate;
+    var missing = EL.filter(function (id) { return !has(id); });
+    var tot = sub - disc, FREE = 90;
+    var ship = !MK[market.get()].free && tot > 0 && tot < FREE ? 19 : 0;
+    return { freeShip: !ship, ship: ship, shipTxt: ship ? money(ship) : 'Free', shipGap: ship ? 'Add ' + money(FREE - tot) + ' more for free shipping' : '', sub: sub, disc: disc, total: tot + ship, trio: trio, hasHammock: has('hammock'), bundleN: n3, discLabel: n3 >= 3 ? '3+ items, 20% off' : '2 items, 10% off', missing: missing, count: cart.count() };
+  },
+  suggest: function () {
+    var it = cart.items(), order = ['sano', 'hammock', 'tarp', 'net'];
+    for (var i = 0; i < order.length; i++) if (!it.some(function (x) { return x.id === order[i]; })) return P[order[i]];
+    return null;
+  }
+};
+
+var YACHU = {
+  P: P, list: ['hammock', 'sano', 'tarp', 'net', 'straps', 'carabiners'].map(function (k) { return P[k]; }), cart: cart, money: money, market: market,
+  eta: function () { var k = MK[market.get()].days, d = new Date(), f = function (x) { return x.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }; var a = new Date(d); a.setDate(d.getDate() + k[0]); var b = new Date(d); b.setDate(d.getDate() + k[1]); return f(a) + ' – ' + f(b); },
+  delivery: function (amount) { var m = MK[market.get()], free = m.free || amount >= 90; return free ? 'Free ' + m.lead : cap(m.lead); },
+  freeTxt: function () { return MK[market.get()].free ? 'Free delivery' : 'Free delivery over $90'; },
+  days: function () { var k = MK[market.get()].days; return k[0] + '–' + k[1] + ' days'; }
+};
+window.YACHU = YACHU;
+
+function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function flashAdded(btn) {
+  if (!btn) return;
+  var label = btn.querySelector('[data-label]');
+  if (!label) return;
+  var original = label.getAttribute('data-original-text');
+  if (original == null) { original = label.textContent; label.setAttribute('data-original-text', original); }
+  label.textContent = 'Added to cart ✓';
+  clearTimeout(btn._flashTimer);
+  btn._flashTimer = setTimeout(function () { label.textContent = original; }, 1600);
+}
+
+/* ============================================================
+   Router
+   ============================================================ */
+var ROUTE_KEYS = ['home', 'shop', 'hammock', 'sano', 'product', 'cart', 'story', 'help', 'wholesale', 'where-to-buy', 'creators', 'journal'];
+
+function parseHash() {
+  var raw = location.hash.slice(1);
+  if (raw.indexOf('/') === 0) raw = raw.slice(1);
+  var qIdx = raw.indexOf('?');
+  var query = new URLSearchParams(qIdx > -1 ? raw.slice(qIdx + 1) : '');
+  var path = qIdx > -1 ? raw.slice(0, qIdx) : raw;
+  var parts = path.split('/').filter(Boolean);
+  return { parts: parts, query: query };
+}
+function currentRoute() {
+  var h = parseHash(), p = h.parts;
+  if (p.length === 0) return { route: 'home' };
+  if (p[0] === 'product') return { route: 'product', id: p[1] || 'tarp' };
+  if (p[0] === 'journal') return { route: 'journal', slug: p[1] || null };
+  if (p[0] === 'help') return { route: 'help', tab: h.query.get('tab') };
+  if (ROUTE_KEYS.indexOf(p[0]) > -1) return { route: p[0] };
+  return { route: 'home' };
+}
+function showRoute(key) {
+  document.querySelectorAll('[data-route]').forEach(function (s) { s.classList.toggle('is-active', s.getAttribute('data-route') === key); });
+}
+function updateNav(routeKey) {
+  document.querySelectorAll('[data-nav]').forEach(function (a) { a.classList.toggle('is-active', a.getAttribute('data-nav') === routeKey); });
+}
+function router() {
+  var r = currentRoute();
+  showRoute(r.route);
+  updateNav(r.route);
+  document.body.setAttribute('data-pdp-active', (r.route === 'hammock' || r.route === 'sano' || r.route === 'product') ? '1' : '0');
+  closeCartDrawer();
+  closeMobileMenu();
+  window.scrollTo(0, 0);
+
+  if (r.route === 'product') renderProductPage(r.id);
+  if (r.route === 'journal') showJournalView(r.slug || 'index');
+  if (r.route === 'help') selectHelpTab(r.tab || 'shipping');
+  if (r.route === 'hammock') { renderHammockGallery(); updatePdpBuybar('hammock'); }
+  if (r.route === 'sano') { renderSanoGallery(); updatePdpBuybar('sano'); }
+  if (r.route === 'cart') renderCartPage();
+
+  renderHeader();
+}
+
+/* ============================================================
+   Header / cart drawer / cart page
+   ============================================================ */
+function renderHeader() {
+  var count = YACHU.cart.count();
+  document.querySelectorAll('[data-cart-count],[data-cart-count-2]').forEach(function (el) { el.textContent = count; });
+  document.querySelectorAll('[data-free-txt]').forEach(function (el) { el.textContent = YACHU.freeTxt(); });
+  document.querySelectorAll('[data-free-txt-2]').forEach(function (el) { el.textContent = YACHU.freeTxt(); });
+  document.querySelectorAll('[data-days-txt]').forEach(function (el) { el.textContent = YACHU.days(); });
+  renderCartDrawer();
+}
+
+function renderCartDrawer() {
+  var body = document.querySelector('[data-cart-drawer-body]');
+  if (!body) return;
+  var items = YACHU.cart.items();
+  var t = YACHU.cart.totals();
+  var sug = YACHU.cart.suggest();
+  var html = '';
+  if (!items.length) {
+    html += '<div class="cart-drawer__empty"><span class="body text-soft">Your cart is empty.</span><a href="#/hammock" class="btn btn--primary">Shop the Hammock Set</a></div>';
+  } else {
+    html += '<div class="cart-drawer__items">' + items.map(function (i) {
+      return '<div class="cart-line">' +
+        '<a href="' + i.href + '" class="cart-line__img" style="background:' + i.bg + '"><img src="' + i.img + '" alt=""></a>' +
+        '<div class="cart-line__body">' +
+        '<div class="cart-line__top"><span>' + esc(i.name) + '</span><span class="mono" style="font-weight:400">' + money(i.line) + '</span></div>' +
+        '<span class="cart-line__variant">' + esc(i.variant) + '</span>' +
+        '<div class="stepper" style="align-self:flex-start"><button type="button" data-cart-dec="' + i.key + '" aria-label="Fewer">−</button><span class="mono" style="min-width:24px;text-align:center">' + i.qty + '</span><button type="button" data-cart-inc="' + i.key + '" aria-label="More">+</button></div>' +
+        '</div></div>';
+    }).join('') + '</div>';
+  }
+  if (items.length && sug) {
+    var label = t.bundleN === 1 ? 'ADD 1 MORE · 10% OFF' : t.bundleN === 2 ? 'ADD 1 MORE · 20% OFF' : 'GOES WITH IT';
+    html += '<div class="cart-drawer__suggest"><img src="' + (sug.thumb || sug.img) + '" alt="" style="width:52px;height:52px;border-radius:4px;object-fit:cover;background:' + sug.bg + '">' +
+      '<span class="stack" style="gap:2px;flex:1;min-width:0"><span class="mono body-sm text-soft" style="letter-spacing:.1em">' + label + '</span><span style="font-size:14px;font-weight:500">' + esc(sug.name) + '</span></span>' +
+      '<button type="button" class="btn btn--secondary btn--sm" data-cart-add-suggest="' + sug.id + '">Add <span class="mono">' + money(sug.price) + '</span></button></div>';
+  }
+  if (items.length) {
+    html += '<div class="cart-drawer__summary">';
+    if (t.trio) html += '<div class="summary-row summary-row--discount"><span>' + t.discLabel + '</span><span class="mono">−' + money(t.disc) + '</span></div>';
+    html += '<div class="summary-row"><span>Shipping</span><span>' + (t.shipTxt || 'Free') + '</span></div>';
+    if (t.shipGap) html += '<div class="summary-note">' + t.shipGap + '</div>';
+    html += '<div class="summary-row summary-row--total"><span>Total</span><span class="mono" style="font-weight:500">' + money(t.total) + '</span></div>';
+    html += '<button type="button" class="btn btn--primary btn--block" style="margin-top:6px" data-checkout>Checkout</button>';
+    html += '<p class="checkout-note" data-checkout-note hidden>This is a preview site — checkout isn’t connected. Contact <a href="mailto:info@yachu.co" style="color:inherit;text-decoration:underline">info@yachu.co</a> to order.</p>';
+    html += '<span class="payment-icons-note">Apple Pay · Google Pay · PayPal · Shop Pay</span>';
+    html += '<a href="#/cart" class="btn-text" style="text-align:center">View cart</a></div>';
+  }
+  body.innerHTML = html;
+  body.querySelectorAll('[data-cart-inc]').forEach(function (b) { b.addEventListener('click', function () { var k = b.getAttribute('data-cart-inc'); var i = YACHU.cart.items().find(function (x) { return x.key === k; }); YACHU.cart.setQty(k, (i ? i.qty : 0) + 1); }); });
+  body.querySelectorAll('[data-cart-dec]').forEach(function (b) { b.addEventListener('click', function () { var k = b.getAttribute('data-cart-dec'); var i = YACHU.cart.items().find(function (x) { return x.key === k; }); YACHU.cart.setQty(k, (i ? i.qty : 1) - 1); }); });
+  body.querySelectorAll('[data-cart-add-suggest]').forEach(function (b) { b.addEventListener('click', function () { YACHU.cart.add(b.getAttribute('data-cart-add-suggest'), null, 1, true); }); });
+  var checkoutBtn = body.querySelector('[data-checkout]');
+  if (checkoutBtn) checkoutBtn.addEventListener('click', function () { var note = body.querySelector('[data-checkout-note]'); if (note) note.hidden = false; });
+}
+
+function renderCartPage() {
+  var items = YACHU.cart.items();
+  var t = YACHU.cart.totals();
+  var emptyEl = document.querySelector('[data-cart-page-empty]');
+  if (emptyEl) emptyEl.hidden = !!items.length;
+  var itemsRoot = document.querySelector('[data-cart-page-items]');
+  if (!itemsRoot) return;
+  itemsRoot.innerHTML = items.map(function (i) {
+    return '<div class="cart-page-line">' +
+      '<a href="' + i.href + '" class="cart-page-line__img" style="background:' + i.bg + '"><img src="' + i.img + '" alt=""></a>' +
+      '<div class="stack gap-1" style="flex:1;min-width:0">' +
+      '<div style="display:flex;justify-content:space-between;gap:12px;font-size:16px;font-weight:500"><span>' + esc(i.name) + '</span><span class="mono" style="font-weight:400">' + money(i.line) + '</span></div>' +
+      '<span class="body-sm text-soft">' + esc(i.variant) + ' · ' + money(i.price) + ' each</span>' +
+      '<div style="display:flex;align-items:center;gap:16px;margin-top:4px">' +
+      '<div class="stepper"><button type="button" data-cartpage-dec="' + i.key + '" aria-label="Fewer">−</button><span class="mono" style="min-width:24px;text-align:center">' + i.qty + '</span><button type="button" data-cartpage-inc="' + i.key + '" aria-label="More">+</button></div>' +
+      '<button type="button" class="btn-text" data-cartpage-remove="' + i.key + '">Remove</button></div></div></div>';
+  }).join('');
+  itemsRoot.querySelectorAll('[data-cartpage-inc]').forEach(function (b) { b.addEventListener('click', function () { var k = b.getAttribute('data-cartpage-inc'); var i = YACHU.cart.items().find(function (x) { return x.key === k; }); YACHU.cart.setQty(k, (i ? i.qty : 0) + 1); }); });
+  itemsRoot.querySelectorAll('[data-cartpage-dec]').forEach(function (b) { b.addEventListener('click', function () { var k = b.getAttribute('data-cartpage-dec'); var i = YACHU.cart.items().find(function (x) { return x.key === k; }); YACHU.cart.setQty(k, (i ? i.qty : 1) - 1); }); });
+  itemsRoot.querySelectorAll('[data-cartpage-remove]').forEach(function (b) { b.addEventListener('click', function () { YACHU.cart.setQty(b.getAttribute('data-cartpage-remove'), 0); }); });
+
+  var bundleBox = document.querySelector('[data-cart-page-bundle]');
+  if (bundleBox) {
+    if (items.length && (t.bundleN === 1 || t.bundleN === 2)) {
+      bundleBox.hidden = false;
+      document.querySelector('[data-cart-bundle-head]').textContent = t.bundleN === 1 ? '2 items 10% off, 3+ items 20% off.' : 'Take any 3 for 20% off.';
+      document.querySelector('[data-cart-bundle-hint]').textContent = 'Add one more:';
+      var addsRoot = document.querySelector('[data-cart-bundle-adds]');
+      addsRoot.innerHTML = t.missing.map(function (k) { return '<button type="button" class="btn btn--secondary btn--sm" data-bundle-add="' + k + '">Add ' + esc(P[k].short) + ' <span class="mono">' + money(P[k].price) + '</span></button>'; }).join('');
+      addsRoot.querySelectorAll('[data-bundle-add]').forEach(function (b) { b.addEventListener('click', function () { YACHU.cart.add(b.getAttribute('data-bundle-add'), null, 1, false); }); });
+    } else { bundleBox.hidden = true; }
+  }
+
+  var summary = document.querySelector('[data-cart-page-summary]');
+  if (summary) {
+    summary.hidden = !items.length;
+    document.querySelector('[data-cart-count]').textContent = t.count;
+    document.querySelector('[data-cart-sub]').textContent = money(t.sub);
+    var discRow = document.querySelector('[data-cart-disc-row]');
+    discRow.hidden = !t.trio;
+    document.querySelector('[data-cart-disc-label]').textContent = t.discLabel || '';
+    document.querySelector('[data-cart-disc]').textContent = '−' + money(t.disc);
+    document.querySelector('[data-cart-ship]').textContent = t.shipTxt || 'Free';
+    var gapEl = document.querySelector('[data-cart-ship-gap]');
+    if (t.shipGap) { gapEl.hidden = false; gapEl.textContent = t.shipGap; } else gapEl.hidden = true;
+    document.querySelector('[data-cart-total]').textContent = money(t.total);
+  }
+}
+
+/* ============================================================
+   Generic accordion (reused pattern across PDP specs/FAQ/help)
+   ============================================================ */
+function bindAccordions(root) {
+  (root || document).querySelectorAll('[data-accordion-trigger]').forEach(function (btn) {
+    if (btn.dataset.bound) return;
+    btn.dataset.bound = '1';
+    btn.addEventListener('click', function () {
+      var panelId = btn.getAttribute('aria-controls');
+      var panel = document.getElementById(panelId);
+      var open = btn.getAttribute('aria-expanded') === 'true';
+      var group = btn.getAttribute('data-accordion-group');
+      if (group) {
+        document.querySelectorAll('[data-accordion-group="' + group + '"]').forEach(function (other) {
+          if (other !== btn) {
+            other.setAttribute('aria-expanded', 'false');
+            var sign = other.querySelector('[data-accordion-sign]');
+            if (sign) sign.textContent = '+';
+            var op = document.getElementById(other.getAttribute('aria-controls'));
+            if (op) op.hidden = true;
+          }
+        });
+      }
+      btn.setAttribute('aria-expanded', String(!open));
+      var mySign = btn.querySelector('[data-accordion-sign]');
+      if (mySign) mySign.textContent = open ? '+' : '−';
+      if (panel) panel.hidden = open;
+    });
+  });
+}
+function bindCarouselButtons() {
+  document.querySelectorAll('[data-carousel-prev],[data-carousel-next]').forEach(function (btn) {
+    if (btn.dataset.bound) return;
+    btn.dataset.bound = '1';
+    var dir = btn.hasAttribute('data-carousel-prev') ? -1 : 1;
+    btn.addEventListener('click', function () {
+      var scope = btn.closest('section') || document;
+      var track = scope.querySelector('[data-carousel]');
+      if (track) track.scrollBy({ left: dir * track.clientWidth * 0.8, behavior: 'smooth' });
+    });
+  });
+}
+
+/* ============================================================
+   Home page
+   ============================================================ */
+var HOME_COLORS = {
+  orange: { name: 'Orange', pos: '70% 50%', img: 'images/mountain-orange.jpg', alt: 'The orange Airlite Hammock hung at Api Base Camp, Nepal, 4,200 m', l: 'API BASE CAMP · 4,200 M', r: 'FAR-WEST NEPAL' },
+  blue: { name: 'Blue', pos: '32% 55%', img: 'images/forest-blue.jpg', alt: 'The blue Airlite Hammock hung between fir trees in Makalu Barun Valley, 3,600 m', l: 'MAKALU BARUN VALLEY · 3,600 M', r: 'EASTERN NEPAL' },
+  green: { name: 'Green', pos: '58% 60%', img: 'images/green-life.jpg', alt: 'Someone resting in the green Airlite Hammock at Yangle Kharka, 3,600 m', l: 'YANGLE KHARKA · 3,600 M', r: 'MAKALU REGION' }
+};
+var homeColor = 'orange';
+
+function initHome() {
+  document.querySelectorAll('[data-home-swatches] .swatch').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('[data-home-swatches] .swatch').forEach(function (b) { b.classList.remove('is-active'); });
+      btn.classList.add('is-active');
+      homeColor = btn.getAttribute('data-color');
+      var c = HOME_COLORS[homeColor];
+      var nameEl = document.querySelector('[data-home-color-name]');
+      if (nameEl) nameEl.textContent = c.name;
+      var img = document.querySelector('[data-home-hero-img]');
+      if (img) { img.src = c.img; img.alt = c.alt; img.style.objectPosition = c.pos; }
+      var lEl = document.querySelector('[data-home-photo-l]'); if (lEl) lEl.textContent = c.l;
+      var rEl = document.querySelector('[data-home-photo-r]'); if (rEl) rEl.textContent = c.r;
+      var ledgerImg = document.querySelector('[data-home-ledger-img]'); if (ledgerImg) ledgerImg.src = 'images/cut-hammock-' + homeColor + '.webp';
+      var pouchImg = document.querySelector('[data-home-ledger-pouch]'); if (pouchImg) pouchImg.src = 'images/cut-pouch-' + homeColor + '.webp';
+      renderPackChecklist();
+    });
+  });
+  var addHammockBtn = document.querySelector('[data-home-add-hammock]');
+  if (addHammockBtn) addHammockBtn.addEventListener('click', function () {
+    YACHU.cart.add('hammock', HOME_COLORS[homeColor].name, 1, true);
+    flashAdded(this);
+    var panel = document.querySelector('[data-home-upsell]');
+    if (panel) { panel.hidden = false; panel.dataset.added = ''; }
+  });
+  var upsellClose = document.querySelector('[data-home-upsell-close]');
+  if (upsellClose) upsellClose.addEventListener('click', function () { document.querySelector('[data-home-upsell]').hidden = true; });
+  var upsellAdd = document.querySelector('[data-home-add-sano-upsell]');
+  if (upsellAdd) upsellAdd.addEventListener('click', function () {
+    var panel = document.querySelector('[data-home-upsell]');
+    if (panel.dataset.added === '1') return;
+    YACHU.cart.add('sano', null, 1, true);
+    panel.dataset.added = '1';
+    var lbl = this.querySelector('[data-label]');
+    if (lbl) lbl.textContent = 'Added ✓';
+  });
+  var addSanoBtn = document.querySelector('[data-home-add-sano]');
+  if (addSanoBtn) addSanoBtn.addEventListener('click', function () { YACHU.cart.add('sano', null, 1, true); flashAdded(this); });
+}
+
+/* Pack builder */
+var KIT = [{ id: 'hammock', w: 225, p: 119 }, { id: 'sano', w: 255, p: 94 }, { id: 'tarp', w: 450, p: 63 }, { id: 'net', w: 260, p: 50 }];
+var PRESETS = { day: { hammock: true, sano: true, tarp: false, net: false }, overnight: { hammock: true, sano: false, tarp: true, net: true }, everything: { hammock: true, sano: true, tarp: true, net: true } };
+var packState = Object.assign({}, PRESETS.day);
+function grams(n) { return n >= 1000 ? (n / 1000).toFixed(2).replace(/0$/, '') + ' kg' : n + ' g'; }
+function syncPresetActive() {
+  document.querySelectorAll('[data-preset]').forEach(function (btn) {
+    var preset = PRESETS[btn.getAttribute('data-preset')];
+    var same = KIT.every(function (k) { return !!preset[k.id] === !!packState[k.id]; });
+    btn.classList.toggle('is-active', same);
+  });
+}
+function renderPackChecklist() {
+  var root = document.querySelector('[data-pack-checklist]');
+  if (!root) return;
+  var itemMeta = {
+    hammock: { name: 'Airlite Hammock Set', meta: HOME_COLORS[homeColor].name + ' · straps and carabiners · 225 g', img: 'images/prod-' + homeColor + '-sand.jpg', bg: 'var(--color-sand)' },
+    sano: { name: 'Sano Packable Daypack', meta: 'Black · 18 L, packs into itself · 255 g', img: 'images/sano-studio.png', bg: '#fff' },
+    tarp: { name: 'Airlite Tarp', meta: '3 × 3 m ripstop nylon · 450 g', img: 'images/tarp-sack.png', bg: '#fff' },
+    net: { name: 'Airlite Bug Net', meta: '2.8 × 1.3 m polyester mesh · 260 g', img: 'images/net-sack.png', bg: '#fff' }
+  };
+  var prices = { hammock: 119, sano: 94, tarp: 63, net: 50 };
+  root.innerHTML = KIT.map(function (k) {
+    var m = itemMeta[k.id], on = !!packState[k.id];
+    return '<button type="button" class="checklist-row" data-pack-item="' + k.id + '">' +
+      '<span class="checklist-row__box' + (on ? ' is-on' : '') + '">' + (on ? '✓' : '') + '</span>' +
+      '<span class="checklist-row__img" style="background:' + m.bg + '"><img src="' + m.img + '" alt=""></span>' +
+      '<span class="checklist-row__body"><span style="font-size:15px;font-weight:500">' + esc(m.name) + '</span><span style="font-size:13px;color:var(--color-soft)">' + esc(m.meta) + '</span></span>' +
+      '<span class="mono" style="font-size:14px">' + money(prices[k.id]) + '</span></button>';
+  }).join('');
+  root.querySelectorAll('[data-pack-item]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      packState[btn.getAttribute('data-pack-item')] = !packState[btn.getAttribute('data-pack-item')];
+      syncPresetActive(); renderPackChecklist(); updatePackSummary();
+    });
+  });
+}
+function updatePackSummary() {
+  var on = KIT.filter(function (k) { return packState[k.id]; });
+  var w = on.reduce(function (s, k) { return s + k.w; }, 0);
+  var sub = on.reduce(function (s, k) { return s + k.p; }, 0);
+  var rate = on.length >= 3 ? 0.2 : on.length === 2 ? 0.1 : 0;
+  var disc = sub * rate;
+  var weightEl = document.querySelector('[data-pack-weight]'); if (weightEl) weightEl.textContent = grams(w);
+  var discRow = document.querySelector('[data-pack-disc-row]');
+  if (discRow) discRow.hidden = rate <= 0;
+  var dl = document.querySelector('[data-pack-disc-label]'); if (dl) dl.textContent = on.length >= 3 ? '3+ items, 20% off' : '2 items, 10% off';
+  var dv = document.querySelector('[data-pack-disc]'); if (dv) dv.textContent = '−' + money(disc);
+  var tot = document.querySelector('[data-pack-total]'); if (tot) tot.textContent = money(sub - disc);
+  var addBtn = document.querySelector('[data-pack-add]');
+  if (addBtn) { var lbl = addBtn.querySelector('[data-label]'); if (lbl) lbl.textContent = on.length ? ('Add ' + on.length + (on.length === 1 ? ' item' : ' items')) : 'Pick at least one'; }
+  var nudge = document.querySelector('[data-pack-nudge]');
+  if (nudge) nudge.textContent = on.length === 1 ? 'Add one more for 10% off.' : on.length === 2 ? ('You save ' + money(disc) + '. Add one more for 20% off.') : on.length >= 3 ? ('You save ' + money(disc) + '.') : '';
+}
+function initPackBuilder() {
+  document.querySelectorAll('[data-preset]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      packState = Object.assign({}, PRESETS[btn.getAttribute('data-preset')]);
+      syncPresetActive(); renderPackChecklist(); updatePackSummary();
+    });
+  });
+  var addBtn = document.querySelector('[data-pack-add]');
+  if (addBtn) addBtn.addEventListener('click', function () {
+    var on = KIT.filter(function (k) { return packState[k.id]; });
+    if (!on.length) return;
+    on.forEach(function (k, idx) {
+      var variant = k.id === 'hammock' ? HOME_COLORS[homeColor].name : null;
+      YACHU.cart.add(k.id, variant, 1, idx === on.length - 1);
+    });
+    flashAdded(this);
+  });
+  renderPackChecklist(); syncPresetActive(); updatePackSummary();
+}
+
+/* ============================================================
+   Hammock PDP
+   ============================================================ */
+var HAMMOCK_COLORS = {
+  Orange: { id: 'orange', life: ['mountain-orange.jpg', '72% 50%', 'The orange Airlite Hammock hung at Api Base Camp, 4,200 m', 'API BASE CAMP · 4,200 M', 'FAR-WEST NEPAL'] },
+  Blue: { id: 'blue', life: ['forest-blue.jpg', '30% 55%', 'The blue Airlite Hammock among fir trees in Makalu Barun Valley, 3,600 m', 'MAKALU BARUN VALLEY · 3,600 M', 'EASTERN NEPAL'] },
+  Green: { id: 'green', life: ['green-life.jpg', '55% 60%', 'Someone resting in the green Airlite Hammock at Yangle Kharka, 3,600 m', 'YANGLE KHARKA · 3,600 M', 'MAKALU REGION'] }
+};
+var hammockState = { color: 'Orange', img: 0, tarp: false, net: false, qty: 1 };
+function hammockGalleryFor(colorName) {
+  var c = HAMMOCK_COLORS[colorName];
+  return [
+    { src: 'images/prod-' + c.id + '-sand.jpg', fit: 'contain', alt: 'The Airlite Hammock Set in ' + colorName.toLowerCase() + ', hung, straps and carabiners attached' },
+    { src: 'images/kit-' + c.id + '.jpg', fit: 'contain', alt: 'Everything in the set: hammock, two tree straps, two carabiners' },
+    { src: 'images/' + c.life[0], fit: 'cover', pos: c.life[1], alt: c.life[2], cap: { l: c.life[3], r: c.life[4] } },
+    { src: 'images/hand-' + c.id + '.jpg', fit: 'cover', pos: '30% 50%', alt: 'The set packed in its pouch, held in one hand', cap: { l: 'PACKED', r: '14 × 8 cm' } },
+    { src: 'images/strap-coil.png', fit: 'contain', alt: 'The two tree straps' },
+    { src: 'images/carabiner-rope.png', fit: 'cover', alt: 'The 5 kN carabiner clipped to the whoopie sling', cap: { l: 'A7075 CARABINER', r: '5 kN · 6 g' } }
+  ];
+}
+function renderHammockGallery() {
+  var root = document.querySelector('[data-hammock-gallery]');
+  if (!root) return;
+  var G = hammockGalleryFor(hammockState.color);
+  var i = Math.min(hammockState.img, G.length - 1);
+  var m = G[i];
+  var capHtml = m.cap ? '<div class="pdp-gallery__cap"><span>' + esc(m.cap.l) + '</span><span>' + esc(m.cap.r) + '</span></div>' : '';
+  root.innerHTML =
+    '<div class="pdp-gallery__main"><img src="' + m.src + '" alt="' + esc(m.alt) + '" style="object-fit:' + m.fit + ';object-position:' + (m.pos || '50% 50%') + '">' + capHtml + '<span class="pdp-gallery__count">' + (i + 1) + ' / ' + G.length + '</span></div>' +
+    '<div class="pdp-thumbs">' + G.map(function (g, idx) { return '<button type="button" class="pdp-thumb' + (idx === i ? ' is-active' : '') + '" data-thumb-idx="' + idx + '" aria-label="' + esc(g.alt) + '"><img src="' + g.src + '" alt=""></button>'; }).join('') + '</div>';
+}
+function updateHammockTotals() {
+  var q = hammockState.qty;
+  var sub = 119 * q + (hammockState.tarp ? 63 : 0) + (hammockState.net ? 50 : 0);
+  var nItems = 1 + (hammockState.tarp ? 1 : 0) + (hammockState.net ? 1 : 0);
+  var rate = nItems >= 3 ? 0.2 : nItems === 2 ? 0.1 : 0;
+  var totalEl = document.querySelector('[data-hammock-total]'); if (totalEl) totalEl.textContent = money(sub - sub * rate);
+  var note = document.querySelector('[data-hammock-kit-note]');
+  if (note) { note.textContent = nItems >= 3 ? '20% off all three.' : nItems === 2 ? '10% off. Add one more for 20% off.' : 'Add one for 10% off, or both for 20% off.'; note.style.color = rate > 0 ? 'var(--color-accent)' : 'var(--color-soft)'; }
+  updatePdpBuybar('hammock');
+}
+function initHammock() {
+  var root = document.querySelector('[data-hammock-gallery]');
+  if (root) root.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-thumb-idx]');
+    if (t) { hammockState.img = parseInt(t.getAttribute('data-thumb-idx'), 10); renderHammockGallery(); }
+  });
+  document.querySelectorAll('[data-hammock-swatches] .swatch').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('[data-hammock-swatches] .swatch').forEach(function (b) { b.classList.remove('is-active'); });
+      btn.classList.add('is-active');
+      hammockState.color = btn.getAttribute('data-color');
+      hammockState.img = 0;
+      var nameEl = document.querySelector('[data-hammock-color-name]'); if (nameEl) nameEl.textContent = hammockState.color;
+      renderHammockGallery();
+      updatePdpBuybar('hammock');
+    });
+  });
+  document.querySelectorAll('[data-route="hammock"] .addon-row[data-addon]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var id = btn.getAttribute('data-addon');
+      hammockState[id] = !hammockState[id];
+      var box = btn.querySelector('[data-addon-box]');
+      box.classList.toggle('is-on', hammockState[id]);
+      box.textContent = hammockState[id] ? '✓' : '';
+      updateHammockTotals();
+    });
+  });
+  var stepper = document.querySelector('[data-route="hammock"] [data-qty-stepper]');
+  if (stepper) stepper.querySelectorAll('button[data-qty-dir]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var dir = parseInt(btn.getAttribute('data-qty-dir'), 10);
+      hammockState.qty = Math.max(1, hammockState.qty + dir);
+      var qEl = document.querySelector('[data-hammock-qty]'); if (qEl) qEl.textContent = hammockState.qty;
+      updateHammockTotals();
+    });
+  });
+  var addBtn = document.querySelector('[data-hammock-add]');
+  if (addBtn) addBtn.addEventListener('click', function () {
+    YACHU.cart.add('hammock', hammockState.color, hammockState.qty, !(hammockState.tarp || hammockState.net));
+    if (hammockState.tarp) YACHU.cart.add('tarp', null, 1, !hammockState.net);
+    if (hammockState.net) YACHU.cart.add('net', null, 1, true);
+    flashAdded(this);
+  });
+  document.querySelectorAll('[data-hammock-review-filter] [data-filter]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('[data-hammock-review-filter] [data-filter]').forEach(function (b) { b.classList.remove('is-active'); });
+      btn.classList.add('is-active');
+      var f = btn.getAttribute('data-filter');
+      var list = document.querySelector('[data-hammock-review-list]');
+      var empty = document.querySelector('[data-hammock-review-empty]');
+      if (f === 'photos') { list.hidden = true; empty.hidden = false; } else { list.hidden = false; empty.hidden = true; }
+    });
+  });
+}
+
+/* ============================================================
+   Sano PDP
+   ============================================================ */
+var SANO_GALLERY = [
+  { src: 'images/sano-held.png', fit: 'cover', alt: 'The black Sano Packable Daypack held by its top handle', cap: '40 × 28 × 10 CM' },
+  { src: 'images/sano-studio.png', fit: 'contain', alt: 'The Sano Packable Daypack next to itself packed into its front pocket', cap: 'PACKS TO 14 × 16 × 4 CM' },
+  { src: 'images/sano-laptop.png', fit: 'cover', alt: 'A laptop sliding into the 14-inch sleeve', cap: '14" LAPTOP SLEEVE' },
+  { src: 'images/sano-strap.png', fit: 'cover', alt: 'Close-up of the grid fabric and sternum strap buckle', cap: '210D UHMWPE / NYLON' }
+];
+var sanoState = { img: 0, hammock: false, tarp: false, net: false };
+function renderSanoGallery() {
+  var root = document.querySelector('[data-sano-gallery]');
+  if (!root) return;
+  var i = Math.min(sanoState.img, SANO_GALLERY.length - 1);
+  var m = SANO_GALLERY[i];
+  root.innerHTML =
+    '<div class="pdp-gallery__main is-portrait"><img src="' + m.src + '" alt="' + esc(m.alt) + '" style="object-fit:' + m.fit + '">' +
+    '<span style="position:absolute;left:12px;bottom:12px;background:#141414;color:#F4F3F0;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;padding:6px 9px">' + esc(m.cap) + '</span>' +
+    '<span class="pdp-gallery__badge">NEW</span></div>' +
+    '<div class="pdp-thumbs">' + SANO_GALLERY.map(function (g, idx) { return '<button type="button" class="pdp-thumb is-tall' + (idx === i ? ' is-active' : '') + '" data-thumb-idx="' + idx + '" aria-label="' + esc(g.alt) + '"><img src="' + g.src + '" alt=""></button>'; }).join('') + '</div>';
+}
+function updateSanoTotals() {
+  var AD = { hammock: 119, tarp: 63, net: 50 };
+  var nItems = 1 + ['hammock', 'tarp', 'net'].filter(function (id) { return sanoState[id]; }).length;
+  var rate = nItems >= 3 ? 0.2 : nItems === 2 ? 0.1 : 0;
+  var sub = 94 + ['hammock', 'tarp', 'net'].reduce(function (s, id) { return s + (sanoState[id] ? AD[id] : 0); }, 0);
+  var totEl = document.querySelector('[data-sano-total]'); if (totEl) totEl.textContent = money(sub - sub * rate);
+  var note = document.querySelector('[data-sano-kit-note]');
+  if (note) { note.textContent = nItems >= 3 ? ('20% off. You save ' + money(sub * rate) + '.') : nItems === 2 ? '10% off. Add one more for 20% off.' : 'Add one for 10% off, or two for 20% off.'; note.style.color = rate > 0 ? 'var(--color-accent)' : 'var(--color-soft)'; }
+  updatePdpBuybar('sano');
+}
+function initSano() {
+  var root = document.querySelector('[data-sano-gallery]');
+  if (root) root.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-thumb-idx]');
+    if (t) { sanoState.img = parseInt(t.getAttribute('data-thumb-idx'), 10); renderSanoGallery(); }
+  });
+  document.querySelectorAll('[data-sano-addon]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var id = btn.getAttribute('data-sano-addon');
+      sanoState[id] = !sanoState[id];
+      var box = btn.querySelector('[data-addon-box]');
+      box.classList.toggle('is-on', sanoState[id]);
+      box.textContent = sanoState[id] ? '✓' : '';
+      updateSanoTotals();
+    });
+  });
+  var addBtn = document.querySelector('[data-sano-add]');
+  if (addBtn) addBtn.addEventListener('click', function () {
+    var on = ['hammock', 'tarp', 'net'].filter(function (id) { return sanoState[id]; });
+    YACHU.cart.add('sano', 'Black', 1, !on.length);
+    on.forEach(function (id, idx) { YACHU.cart.add(id, null, 1, idx === on.length - 1); });
+    flashAdded(this);
+  });
+}
+
+/* ============================================================
+   Generic product PDP (tarp / net / straps / carabiners)
+   ============================================================ */
+var PRODUCT_DATA = {
+  tarp: { name: 'Airlite Tarp', eyebrow: 'Shelter · Handmade in Nepal', catLabel: 'Shelter', trio: true,
+    desc: 'Hangs over your hammock from the same two trees and keeps the rain off. 3 × 3 m of ripstop nylon that packs to 10 × 18 cm.',
+    note: 'The tarp is rated to 3000 mm: fine for normal rain, not for days of monsoon downpour.',
+    imgs: [['tarp-forest.png', 'cover', '#D6CCBB', 'The Airlite Tarp pitched in a misty pine forest'], ['tarp-studio.png', 'contain', '#FFFFFF', 'The Airlite Tarp pitched as an A-frame'], ['tarp-drops.png', 'cover', '#1F4D35', 'Water beading on the tarp fabric'], ['tarp-forest2.png', 'cover', '#D6CCBB', 'The tarp strung between two pines'], ['tarp-sack.png', 'contain', '#FFFFFF', 'The tarp packed in its stuff sack']],
+    specs: [['Weight', '450 g'], ['Size', '3 × 3 m'], ['Packed', '10 × 18 cm'], ['Material', 'Ripstop nylon, 38 gsm'], ['Made in', 'Nepal']] },
+  net: { name: 'Airlite Bug Net', eyebrow: 'Shelter · Handmade in Nepal', catLabel: 'Shelter', trio: true,
+    desc: 'Hangs over the Airlite hammock and keeps insects out while you sleep. Packs to 14 × 9 cm.',
+    imgs: [['net-studio.png', 'contain', '#FFFFFF', 'The Airlite Bug Net hung on its ridgeline'], ['net-sack.png', 'contain', '#FFFFFF', 'The bug net packed in its stuff sack']],
+    specs: [['Weight', '260 g'], ['Size', '2.8 × 1.3 m'], ['Packed', '14 × 9 cm'], ['Material', 'Polyester mesh, 38 gsm'], ['Made in', 'Nepal']] },
+  straps: { name: 'Airlite Tree Straps', eyebrow: 'Accessories · Handmade in Nepal', catLabel: 'Accessories',
+    desc: 'A spare pair of the straps that come with every hammock set. Flat webbing goes around the tree without biting the bark, and the whoopie sling adjusts by pulling, not tying.',
+    imgs: [['strap-tree.png', 'cover', '#D6CCBB', 'A Yachu tree strap wrapped around a pine'], ['strap-coil.png', 'contain', '#FFFFFF', 'Two tree straps, coiled'], ['strap-detail.png', 'contain', '#FFFFFF', 'The webbing, label and whoopie sling']],
+    specs: [['Weight, pair', '65 g'], ['Length', '3 m each'], ['Build', '1.5 m webbing + 1.5 m whoopie sling'], ['Material', 'UHMWPE (25 mm webbing, 3 mm rope)'], ['Made in', 'Nepal']] },
+  carabiners: { name: '5 kN Carabiners', eyebrow: 'Accessories', catLabel: 'Accessories',
+    desc: 'A spare pair of the carabiners that come with every hammock set. 6 g each, rated to 5 kN (500 kg).',
+    imgs: [['carabiner-inuse.png', 'cover', '#D6CCBB', 'A carabiner clipped between the strap and the hammock'], ['carabiner-rope.png', 'cover', '#8A8680', 'Close-up of the carabiner on the sling'], ['carabiner-pouch.png', 'cover', '#8A8680', 'The carabiner clipped to a pouch']],
+    specs: [['Weight, pair', '12 g'], ['Rating', '5 kN (500 kg)'], ['Material', 'A7075 aluminum']] }
+};
+var productState = { id: 'tarp', img: 0, added: false };
+function renderProductPage(id) {
+  if (!PRODUCT_DATA[id]) id = 'tarp';
+  if (productState.id !== id) { productState.id = id; productState.img = 0; productState.added = false; }
+  var p = PRODUCT_DATA[id];
+  var price = P[id].price;
+  var G = p.imgs.map(function (a) { return { src: 'images/' + a[0], fit: a[1], bg: a[2], alt: a[3] }; });
+  var i = Math.min(productState.img, G.length - 1);
+  var m = G[i];
+  var root = document.querySelector('[data-product-root]');
+  if (!root) return;
+  var more = YACHU.list.filter(function (g) { return g.id !== id; }).slice(0, 4);
+  root.innerHTML =
+    '<nav class="breadcrumb"><a href="#/">Home</a><span>/</span><a href="#/shop">' + esc(p.catLabel) + '</a><span>/</span><span class="current">' + esc(p.name) + '</span></nav>' +
+    '<div class="pdp-grid">' +
+    '<div class="pdp-gallery"><div class="pdp-gallery__main"><img src="' + m.src + '" alt="' + esc(m.alt) + '" style="object-fit:' + m.fit + ';background:' + m.bg + '"></div>' +
+    '<div class="pdp-thumbs">' + G.map(function (g, idx) { return '<button type="button" class="pdp-thumb' + (idx === i ? ' is-active' : '') + '" data-prod-thumb="' + idx + '" aria-label="' + esc(g.alt) + '"><img src="' + g.src + '" alt=""></button>'; }).join('') + '</div></div>' +
+    '<div class="pdp-info">' +
+    '<div class="kicker">' + esc(p.eyebrow) + '</div>' +
+    '<h1 class="h1" style="margin-top:-6px">' + esc(p.name) + '</h1>' +
+    '<div class="mono" style="font-size:' + (price != null ? '24px' : '16px') + '">' + (price != null ? money(price) : 'Price coming soon') + '</div>' +
+    '<p class="body text-soft" style="margin:0">' + esc(p.desc) + '</p>' +
+    (price != null ?
+      '<button type="button" class="btn btn--primary" data-product-add><span data-label>' + (productState.added ? 'Added ✓' : 'Add to cart') + '</span><span class="btn-divider"></span><span class="mono">' + money(price) + '</span></button>'
+      :
+      '<a href="mailto:info@yachu.co" class="btn btn--secondary">Ask about availability</a><span style="font-size:13px;color:var(--color-soft);margin-top:-8px;display:block">Already included in every Airlite Hammock Set.</span>'
+    ) +
+    '<div class="stack gap-1 body-sm text-soft"><span>' + YACHU.freeTxt() + ': <strong style="color:var(--color-ink)">' + YACHU.days() + '</strong></span>' +
+    '<a href="#/help"><strong style="color:var(--color-ink);font-weight:500">30-day exchange promise</strong> <span class="link-underline">How it works</span></a></div>' +
+    (p.trio ?
+      '<a href="#/hammock" style="display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--color-hairline);border-radius:var(--radius)">' +
+      '<span style="width:56px;height:56px;flex:0 0 56px;border-radius:4px;overflow:hidden;background:var(--color-sand)"><img src="images/kit-orange.jpg" alt="" style="width:100%;height:100%;object-fit:cover"></span>' +
+      '<span class="stack" style="gap:2px;flex:1;min-width:0"><span class="mono" style="font-size:10px;letter-spacing:.1em;color:var(--color-accent)">FULL KIT · 20% OFF</span><span style="font-size:15px;font-weight:500">Hammock + tarp + bug net</span><span style="font-size:12px;color:var(--color-soft)">935 g for a full night out</span></span>' +
+      '<span style="font-size:18px">›</span></a>' : '') +
+    '<div style="border-top:1px solid var(--color-ink);margin-top:6px">' +
+    p.specs.map(function (s) { return '<div style="display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--color-hairline);font-size:14px"><span>' + esc(s[0]) + '</span><span class="mono" style="font-size:13px;color:var(--color-soft);text-align:right">' + esc(s[1]) + '</span></div>'; }).join('') +
+    '</div>' +
+    (p.note ? '<p class="body-sm text-soft" style="margin:0">' + esc(p.note) + '</p>' : '') +
+    '</div></div>' +
+    '<section class="section px" style="border-top:1px solid var(--color-hairline)"><h2 class="h2" style="margin-bottom:24px">More gear</h2><div class="grid-cards">' +
+    more.map(function (g) { return '<a href="' + g.href + '" class="product-card"><div class="product-card__media" style="background:' + g.bg + '"><img src="' + g.img + '" alt="' + esc(g.name) + '"></div><div class="product-card__row"><span>' + esc(g.name) + '</span><span class="mono">' + (g.price != null ? money(g.price) : 'View') + '</span></div></a>'; }).join('') +
+    '</div></section>';
+
+  root.querySelectorAll('[data-prod-thumb]').forEach(function (btn) {
+    btn.addEventListener('click', function () { productState.img = parseInt(btn.getAttribute('data-prod-thumb'), 10); renderProductPage(id); });
+  });
+  var addBtn = root.querySelector('[data-product-add]');
+  if (addBtn) addBtn.addEventListener('click', function () { YACHU.cart.add(id, null, 1, true); productState.added = true; flashAdded(addBtn); });
+  updatePdpBuybarGeneric(id, price, m);
+}
+
+/* ============================================================
+   Sticky mobile buy bar
+   ============================================================ */
+function updatePdpBuybar(kind) {
+  var img = document.querySelector('[data-pdp-buybar-img]'), name = document.querySelector('[data-pdp-buybar-name]'), meta = document.querySelector('[data-pdp-buybar-meta]'), total = document.querySelector('[data-pdp-buybar-total]'), addBtn = document.querySelector('[data-pdp-buybar-add]');
+  if (!img) return;
+  if (kind === 'hammock') {
+    var c = HAMMOCK_COLORS[hammockState.color];
+    img.src = 'images/prod-' + c.id + '-sand.jpg';
+    name.textContent = 'Hammock Set';
+    meta.textContent = hammockState.color + ' · 225 g';
+    var q = hammockState.qty, sub = 119 * q + (hammockState.tarp ? 63 : 0) + (hammockState.net ? 50 : 0);
+    var nItems = 1 + (hammockState.tarp ? 1 : 0) + (hammockState.net ? 1 : 0);
+    var rate = nItems >= 3 ? 0.2 : nItems === 2 ? 0.1 : 0;
+    total.textContent = money(sub - sub * rate);
+    addBtn.onclick = function () { var b = document.querySelector('[data-hammock-add]'); if (b) b.click(); };
+  } else if (kind === 'sano') {
+    img.src = 'images/sano-studio.png'; name.textContent = 'Sano Packable Daypack'; meta.textContent = 'Black · 255 g';
+    var st = document.querySelector('[data-sano-total]');
+    total.textContent = st ? st.textContent : '$94';
+    addBtn.onclick = function () { var b = document.querySelector('[data-sano-add]'); if (b) b.click(); };
+  }
+}
+function updatePdpBuybarGeneric(id, price, mainImg) {
+  var img = document.querySelector('[data-pdp-buybar-img]'), name = document.querySelector('[data-pdp-buybar-name]'), meta = document.querySelector('[data-pdp-buybar-meta]'), total = document.querySelector('[data-pdp-buybar-total]'), addBtn = document.querySelector('[data-pdp-buybar-add]');
+  if (!img) return;
+  img.src = mainImg.src; name.textContent = PRODUCT_DATA[id].name; meta.textContent = P[id].meta;
+  total.textContent = price != null ? money(price) : 'View';
+  addBtn.onclick = function () { var b = document.querySelector('[data-product-add]'); if (b) b.click(); else window.location.href = 'mailto:info@yachu.co'; };
+}
+
+/* ============================================================
+   Shop filter
+   ============================================================ */
+function initShop() {
+  document.querySelectorAll('[data-shop-chips] [data-cat]').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      document.querySelectorAll('[data-shop-chips] [data-cat]').forEach(function (c) { c.classList.remove('is-active'); });
+      chip.classList.add('is-active');
+      var cat = chip.getAttribute('data-cat');
+      document.querySelectorAll('[data-shop-grid] [data-cat]').forEach(function (card) { card.hidden = !(cat === 'all' || card.getAttribute('data-cat') === cat); });
+    });
+  });
+}
+
+/* ============================================================
+   Help tabs
+   ============================================================ */
+function selectHelpTab(tab) {
+  var valid = ['shipping', 'exchanges', 'care', 'contact'];
+  if (valid.indexOf(tab) === -1) tab = 'shipping';
+  document.querySelectorAll('[data-help-tabs] [data-tab]').forEach(function (btn) {
+    var on = btn.getAttribute('data-tab') === tab;
+    btn.classList.toggle('is-active', on);
+    btn.setAttribute('aria-selected', String(on));
+  });
+  document.querySelectorAll('[data-tab-panel]').forEach(function (pnl) { pnl.hidden = pnl.getAttribute('data-tab-panel') !== tab; });
+  var titles = { shipping: 'Shipping', exchanges: 'Exchanges', care: 'Care and safety', contact: 'Contact' };
+  var titleEl = document.querySelector('[data-help-title]');
+  if (titleEl) titleEl.textContent = titles[tab];
+}
+function initHelp() {
+  document.querySelectorAll('[data-help-tabs] [data-tab]').forEach(function (btn) {
+    btn.addEventListener('click', function () { selectHelpTab(btn.getAttribute('data-tab')); });
+  });
+}
+
+/* ============================================================
+   Journal
+   ============================================================ */
+function showJournalView(slug) {
+  var key = slug === 'hang-hammock' ? 'hang-hammock' : 'index';
+  document.querySelectorAll('[data-journal-view]').forEach(function (v) { v.hidden = v.getAttribute('data-journal-view') !== key; });
+}
+
+/* ============================================================
+   Header chrome: mobile menu + cart drawer open/close
+   ============================================================ */
+var menuBtn, mobileNav, cartToggle, cartDrawer, cartBackdrop, cartCloseBtn;
+function closeMobileMenu() { if (mobileNav && !mobileNav.hidden) { mobileNav.hidden = true; if (menuBtn) menuBtn.setAttribute('aria-expanded', 'false'); } }
+function openCartDrawer() {
+  if (!cartDrawer) return;
+  cartDrawer.hidden = false; cartBackdrop.hidden = false;
+  requestAnimationFrame(function () { cartDrawer.classList.add('is-open'); cartBackdrop.classList.add('is-open'); });
+  document.body.style.overflow = 'hidden';
+}
+function closeCartDrawer() {
+  if (!cartDrawer) return;
+  cartDrawer.classList.remove('is-open'); cartBackdrop.classList.remove('is-open');
+  document.body.style.overflow = '';
+  setTimeout(function () { cartDrawer.hidden = true; cartBackdrop.hidden = true; }, 280);
+}
+function initChrome() {
+  menuBtn = document.querySelector('[data-menu-toggle]');
+  mobileNav = document.querySelector('[data-mobile-nav]');
+  cartToggle = document.querySelector('[data-cart-toggle]');
+  cartDrawer = document.querySelector('[data-cart-drawer]');
+  cartBackdrop = document.querySelector('[data-cart-backdrop]');
+  cartCloseBtn = document.querySelector('[data-cart-close]');
+  if (menuBtn) menuBtn.addEventListener('click', function () { mobileNav.hidden = !mobileNav.hidden; menuBtn.setAttribute('aria-expanded', String(!mobileNav.hidden)); });
+  if (mobileNav) mobileNav.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', closeMobileMenu); });
+  if (cartToggle) cartToggle.addEventListener('click', function () { if (cartDrawer.classList.contains('is-open')) closeCartDrawer(); else openCartDrawer(); });
+  if (cartCloseBtn) cartCloseBtn.addEventListener('click', closeCartDrawer);
+  if (cartBackdrop) cartBackdrop.addEventListener('click', closeCartDrawer);
+
+  var cartPageCheckout = document.querySelector('[data-route="cart"] [data-checkout]');
+  if (cartPageCheckout) cartPageCheckout.addEventListener('click', function () {
+    var note = document.querySelector('[data-route="cart"] [data-checkout-note]');
+    if (note) note.hidden = false;
+  });
+
+  var nlForm = document.querySelector('[data-newsletter-form]');
+  if (nlForm) nlForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var note = document.querySelector('[data-newsletter-note]');
+    if (note) note.hidden = false;
+    nlForm.reset();
+  });
+
+  var marketSelect = document.querySelector('[data-market-select]');
+  if (marketSelect) {
+    marketSelect.value = YACHU.market.get();
+    marketSelect.addEventListener('change', function () {
+      YACHU.market.set(marketSelect.value);
+      renderHeader();
+      if (currentRoute().route === 'cart') renderCartPage();
+    });
+  }
+}
+
+/* ============================================================
+   Init
+   ============================================================ */
+function init() {
+  initChrome();
+  initHome();
+  initPackBuilder();
+  initHammock();
+  initSano();
+  initShop();
+  initHelp();
+  bindAccordions();
+  bindCarouselButtons();
+
+  window.addEventListener('yachu-cart', function (e) {
+    renderHeader();
+    if (currentRoute().route === 'cart') renderCartPage();
+    if (e.detail && e.detail.open) openCartDrawer();
+  });
+  window.addEventListener('hashchange', router);
+
+  renderHeader();
+  router();
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+
+})();
+</script>
+</body>
+</html>
