@@ -558,11 +558,24 @@ body[data-pdp-active="1"] { padding-bottom: 68px; }
   .pdp-grid, .home-hero, .hero-media { grid-template-columns: 1fr; }
 }
 
-/* Mobile/tablet: photo first, then the text and buttons */
+/* Mobile/tablet: short photo on top, then info + Add to cart in the same screen */
 @media (max-width: 919px) {
   .home-hero { grid-template-columns: 1fr; }
-  .home-hero__photo { order: -1; min-height: clamp(280px, 80vw, 480px); }
-  .home-hero__copy { padding-top: 28px; }
+  .home-hero__photo {
+    order: -1;
+    min-height: 0;
+    height: 32vh;             /* fallback for older browsers */
+    height: 32svh;            /* about a third of the visible screen */
+    max-height: 300px;
+  }
+  .home-hero__photo-cap { padding: 10px 16px; font-size: 10px; }
+  .home-hero__copy { gap: 10px; padding: 16px 20px 24px; }
+  .home-hero__copy .kicker { font-size: 11px; }
+  .home-hero__copy .h1--display { font-size: clamp(28px, 8vw, 36px); line-height: 1.02; }
+  .home-hero__copy .body-lg { font-size: 15px; line-height: 1.45; }
+  .home-hero__copy .swatch { width: 28px; height: 28px; }
+  .home-hero__copy .btn { height: 52px; }
+  .home-hero__copy .stack.gap-2 { margin-top: 2px !important; gap: 10px; }
 }
 </style>
 </head>
