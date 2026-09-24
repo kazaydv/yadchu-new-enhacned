@@ -12,6 +12,10 @@
   (this file) plus the /images folder next to it. No build step, no server,
   no Shopify. Upload both to any static host.
 
+  The "Made in Nepal" workshop section on the home page loads img/factory.jpg
+  (note: the img/ folder, not images/). Until that file exists, the section
+  shows a neutral placeholder instead of a broken image.
+
   Two things are intentionally stubbed because there is no backend here:
 
   1. CHECKOUT — there is no payment processor wired up. Clicking "Checkout"
@@ -446,6 +450,23 @@ body { background: var(--color-bg); }
 .ledger-total { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-top: 16px; }
 .ledger-total__val { font-size: clamp(28px, 3vw, 36px); font-weight: 500; color: var(--color-accent); white-space: nowrap; }
 
+/* Made in Nepal / workshop section (home) */
+.made-local { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: clamp(28px, 5vw, 72px); align-items: center; border-top: 1px solid var(--color-hairline); }
+.made-local__media { position: relative; margin: 0; aspect-ratio: 4/3; border-radius: var(--radius); overflow: hidden; background: #E5DFD3; }
+.made-local__media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; z-index: 1; }
+.made-local__ph { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 0 16%; font-family: var(--font-mono); font-size: 13px; line-height: 1.5; color: var(--color-soft); }
+.made-local__ph::before, .made-local__ph::after { content: ""; position: absolute; width: 16px; height: 16px; border-color: var(--color-soft); border-style: solid; opacity: .6; }
+.made-local__ph::before { top: 14px; left: 14px; border-width: 1px 0 0 1px; }
+.made-local__ph::after { bottom: 14px; right: 14px; border-width: 0 1px 1px 0; }
+.made-local__ph span:first-child { letter-spacing: .1em; font-size: 12px; }
+.made-local__cap { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 30px 16px 12px; display: flex; justify-content: space-between; gap: 12px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; color: #FAFAF7; background: linear-gradient(transparent, rgba(0,0,0,.45)); }
+.made-local__media.is-empty .made-local__cap { display: none; }
+.made-local__steps { display: flex; flex-direction: column; border-top: 1px solid var(--color-ink); }
+.made-local__steps li { display: flex; align-items: baseline; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--color-hairline); }
+.made-local__steps .mono { font-size: 12px; color: var(--color-soft); min-width: 22px; }
+.made-local__steps strong { display: block; font-size: 16px; font-weight: 600; }
+.made-local__steps span.body-sm { display: block; color: var(--color-soft); margin-top: 2px; }
+
 /* Sano crossover / dark sections */
 .section-dark { background: #141414; color: #F4F3F0; }
 .section-dark .text-soft { color: rgba(244,243,240,.72); }
@@ -794,6 +815,28 @@ body[data-pdp-active="1"] { padding-bottom: 68px; }
         <div class="product-card__row"><span>5 kN Carabiners</span><span class="mono">View</span></div>
         <div class="product-card__meta">Spare pair, aluminium · 12 g</div>
       </a>
+    </div>
+  </section>
+
+  <!-- Made in Nepal: local production / workshop -->
+  <section class="section px made-local" aria-label="Made in Nepal">
+    <figure class="made-local__media" data-made-local-media>
+      <div class="made-local__ph" aria-hidden="true"><span>PHOTO — 4:3</span><span>Workshop: hands, fabric, the real floor</span></div>
+      <img src="img/factory.jpg" alt="The Yachu team cutting and sewing hammock fabric in our workshop in Nepal" loading="lazy" onerror="this.parentNode.classList.add('is-empty');this.remove()">
+      <figcaption class="made-local__cap"><span>OUR WORKSHOP</span><span>LALITPUR · NEPAL</span></figcaption>
+    </figure>
+    <div class="stack gap-4">
+      <div class="stack gap-3">
+        <div class="kicker">Made in Nepal</div>
+        <h2 class="h2 text-balance">We don&rsquo;t outsource this.</h2>
+        <p class="body-lg text-pretty" style="max-width:42ch;margin:0">Every Yachu piece is designed at our head office in Lalitpur and made by our own team in Nepal.</p>
+      </div>
+      <ol class="made-local__steps">
+        <li><span class="mono">01</span><span><strong>Designed in Lalitpur</strong><span class="body-sm">Every product starts at our head office in Jawalakhel.</span></span></li>
+        <li><span class="mono">02</span><span><strong>Made by our own team</strong><span class="body-sm">Cut and sewn in Nepal by the people who design it, not a contract factory.</span></span></li>
+        <li><span class="mono">03</span><span><strong>Tested on Nepal's trails</strong><span class="body-sm">From Api Base Camp to Langtang, on the trails we grew up exploring.</span></span></li>
+      </ol>
+      <a href="#/story" class="link-underline" style="font-size:16px;font-weight:500;align-self:flex-start">Read our story</a>
     </div>
   </section>
 
